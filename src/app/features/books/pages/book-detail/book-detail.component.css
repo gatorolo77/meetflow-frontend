@@ -1,0 +1,11 @@
+/* Estilos para el componente de detalle de producto */
+:host {
+  display: block;
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f9fafb;
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}

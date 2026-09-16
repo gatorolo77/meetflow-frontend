@@ -1,0 +1,87 @@
+.status-card {
+  margin-bottom: 0;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  border-radius: 20px;
+}
+
+.widget-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #FFFFFF !important;
+  margin-bottom: 4px;
+  letter-spacing: -0.2px;
+}
+
+.overall-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.live-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-pill);
+  background-color: #4ADE80;
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.3);
+}
+
+.overall-text {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.services-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.service-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.22) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  transition: all 0.2s ease;
+}
+
+.service-item:hover {
+  background: rgba(0, 0, 0, 0.35) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+}
+
+.service-icon {
+  color: rgba(255, 255, 255, 0.95) !important;
+  display: flex;
+  align-items: center;
+}
+
+.service-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #FFFFFF !important;
+  flex: 1;
+}
+
+.service-tag {
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.tag-optimal {
+  color: #4ADE80 !important;
+}

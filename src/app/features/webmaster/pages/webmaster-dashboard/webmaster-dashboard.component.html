@@ -1,0 +1,129 @@
+<div class="wm-dashboard-layout">
+  
+  <div class="toast-alert" *ngIf="toastMessage">
+    <span>{{ toastMessage }}</span>
+  </div>
+
+  
+  <main class="wm-content">
+    
+    <div class="stats-grid">
+      <div class="stat-card yellow">
+        <div class="stat-icon">⏳</div>
+        <div class="stat-meta">
+          <span class="stat-value">{{ pendingHosts.length }}</span>
+          <span class="stat-label">Solicitudes de Anfitrión Pendientes</span>
+        </div>
+      </div>
+
+      <div class="stat-card green">
+        <div class="stat-icon">✅</div>
+        <div class="stat-meta">
+          <span class="stat-value">{{ approvedCount }}</span>
+          <span class="stat-label">Anfitriones Aprobados</span>
+        </div>
+      </div>
+
+      <div class="stat-card red">
+        <div class="stat-icon">🚫</div>
+        <div class="stat-meta">
+          <span class="stat-value">{{ rejectedCount }}</span>
+          <span class="stat-label">Solicitudes Rechazadas</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card para Enviar Invitación por Email -->
+    <div class="panel-card invite-card">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">✉️ Enviar Invitación a Futuro Anfitrión</h2>
+          <p class="panel-subtitle">Envía un correo electrónico con un enlace seguro de registro para que el nuevo anfitrión complete su solicitud.</p>
+        </div>
+      </div>
+
+      <form (submit)="sendInvitation(); $event.preventDefault()" class="invite-form">
+        <div class="invite-input-group">
+          <input 
+            type="email" 
+            [(ngModel)]="inviteEmail" 
+            name="inviteEmail"
+            placeholder="Ejemplo: anfitrion.nuevo@empresa.com" 
+            class="invite-input" 
+            required 
+          />
+          <button type="submit" class="btn-send-invite" [disabled]="inviteSending">
+            <span *ngIf="!inviteSending">Enviar Enlace por Email</span>
+            <span *ngIf="inviteSending">Enviando correo...</span>
+          </button>
+        </div>
+      </form>
+
+      <!-- Preview del último enlace generado para pruebas rápidas -->
+      <div class="invite-link-preview" *ngIf="lastGeneratedLink">
+        <span class="preview-label">🔗 Enlace generado y enviado por correo (apto para probar):</span>
+        <div class="preview-box">
+          <a [href]="lastGeneratedLink" target="_blank" class="link-text">{{ lastGeneratedLink }}</a>
+          <button class="btn-copy" (click)="copyLink(lastGeneratedLink)">Copiar Enlace</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel de Solicitudes Pendientes -->
+    <div class="panel-card">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">Solicitudes de Registro de Anfitriones</h2>
+          <p class="panel-subtitle">Revisa los datos recibidos desde el enlace de invitación o registro pre-validado.</p>
+        </div>
+        <button class="btn-refresh" (click)="loadPendingHosts()">↻ Actualizar Lista</button>
+      </div>
+
+  
+      <div class="loading-state" *ngIf="isLoading">
+        <span>Cargando solicitudes de anfitriones...</span>
+      </div>
+
+      
+      <div class="empty-state" *ngIf="!isLoading && pendingHosts.length === 0">
+        <div class="empty-icon">🎉</div>
+        <h3>¡No hay solicitudes pendientes!</h3>
+        <p>Todos los anfitriones registrados han sido revisados y procesados.</p>
+      </div>
+
+
+      <div class="hosts-grid" *ngIf="!isLoading && pendingHosts.length > 0">
+        <div class="host-item-card" *ngFor="let host of pendingHosts">
+          <div class="card-user-header">
+            <img [src]="host.avatarUrl" [alt]="host.name" class="host-avatar">
+            <div class="host-info">
+              <h3 class="host-name">{{ host.name }}</h3>
+              <span class="host-email">{{ host.email }}</span>
+              <span class="status-badge pending">Pendiente de Aprobación</span>
+            </div>
+          </div>
+
+          <div class="card-details-box">
+            <div class="detail-row">
+              <span class="lbl">Rol Solicitado:</span>
+              <span class="val bold">Anfitrión (Host)</span>
+            </div>
+            <div class="detail-row">
+              <span class="lbl">Permisos:</span>
+              <span class="val">Crear Salas y Enviar Invitaciones</span>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <button class="btn-approve" (click)="approveHost(host)">
+              ✓ Aprobar Anfitrión
+            </button>
+            <button class="btn-reject" (click)="rejectHost(host)">
+              ✕ Rechazar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

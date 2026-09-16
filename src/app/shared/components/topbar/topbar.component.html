@@ -1,0 +1,90 @@
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="icon-btn menu-toggle-btn" (click)="toggleMenu()" title="Abrir/Cerrar Menú">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+    <app-logo [routerLink]="(isWebmaster$ | async) ? '/webmaster/dashboard' : '/dashboard'" style="cursor: pointer;"></app-logo>
+  </div>
+
+  <div class="topbar-right">
+
+    <div class="notification-wrapper" *ngIf="{ isWm: (isWebmaster$ | async), count: (notificationCount$ | async) } as state">
+      <button class="icon-btn notification-btn" title="Notificaciones" (click)="toggleNotifications()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+        </svg>
+        <span class="notification-badge" *ngIf="state.count && state.count > 0">{{ state.count }}</span>
+      </button>
+
+      <div class="notification-dropdown" *ngIf="showDropdown">
+        <div class="dropdown-header">
+          <h3>{{ state.isWm ? 'Solicitudes de Anfitriones' : 'Solicitudes de Ingreso' }}</h3>
+          <span class="badge-tag">{{ state.count || 0 }} pendientes</span>
+        </div>
+
+        <ng-container *ngIf="state.isWm; else roomNotificationsTpl">
+          <div class="notifications-list" *ngIf="(pendingHosts$ | async) as hosts">
+            <div class="empty-notif" *ngIf="hosts.length === 0">
+              <p>No hay solicitudes de anfitrión pendientes.</p>
+            </div>
+            <div class="notif-item" *ngFor="let host of hosts" (click)="navigateToNotifications(true)">
+              <img [src]="host.avatarUrl" [alt]="host.name" class="notif-avatar">
+              <div class="notif-text">
+                <strong>{{ host.name }}</strong>
+                <span>Solicita registro como Anfitrión ({{ host.email }})</span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-template #roomNotificationsTpl>
+          <div class="notifications-list" *ngIf="(pendingRoomRequests$ | async) as reqs">
+            <div class="empty-notif" *ngIf="reqs.length === 0">
+              <p>No hay solicitudes de ingreso a salas pendientes.</p>
+            </div>
+            <div class="notif-item" *ngFor="let req of reqs" (click)="navigateToNotifications(false)">
+              <img [src]="req.avatarUrl" [alt]="req.userName" class="notif-avatar">
+              <div class="notif-text">
+                <strong>{{ req.userName }}</strong>
+                <span>Pide ingresar a {{ req.targetMeetingTitle }}</span>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+
+        <div class="dropdown-footer">
+          <button class="btn-view-all" (click)="navigateToNotifications(!!state.isWm)">
+            {{ state.isWm ? 'Gestionar Anfitriones en Dashboard' : 'Ver todas las Solicitudes' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="user-profile" *ngIf="(currentUser$ | async) as user">
+      <div class="avatar">
+        <img [src]="user.avatarUrl" [alt]="user.name">
+      </div>
+      <div class="user-info">
+        <span class="user-name">{{ user.name }}</span>
+        <span class="user-role">
+          <span class="live-dot"></span>
+          {{ user.role }}
+        </span>
+      </div>
+
+      <button class="icon-btn logout-btn" (click)="onLogout()" title="Cerrar sesión">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+

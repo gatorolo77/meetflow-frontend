@@ -1,0 +1,195 @@
+<div class="modal-backdrop" (click)="onClose()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+   
+    <div class="modal-header">
+      <div class="header-title-block">
+        <div class="modal-icon-badge icon-cognac">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
+        </div>
+        <div>
+          <h2 class="modal-title">Enviar Invitaciones CSV</h2>
+          <p class="modal-subtitle">Agenda la reunión y envía invitaciones por mail con acceso directo a la sala de espera.</p>
+        </div>
+      </div>
+
+      <button class="close-btn" (click)="onClose()" title="Cerrar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body" *ngIf="!successResponse">
+      
+      <div class="form-group" *ngIf="existingMeetings.length > 0">
+        <label class="input-label">Vincular a una reunión existente (opcional):</label>
+        <div class="existing-meetings-pills">
+          <button 
+            type="button" 
+            class="pill-btn" 
+            *ngFor="let m of existingMeetings"
+            [class.active]="meetingCode === (m.code || m.id)"
+            (click)="selectExistingMeeting(m)">
+            <span>{{ m.title }}</span>
+            <small>({{ m.code || m.id }})</small>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="meetingTitle">Título de la reunión</label>
+          <input 
+            id="meetingTitle" 
+            type="text" 
+            [(ngModel)]="meetingTitle" 
+            placeholder="Ej. Sync Semanal de Producto">
+        </div>
+
+        <div class="form-group">
+          <label for="meetingCode">Código de reunión (para ingreso manual o link)</label>
+          <input 
+            id="meetingCode" 
+            type="text" 
+            [(ngModel)]="meetingCode" 
+            placeholder="Ej. m-101">
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="campaignName">Nombre del lote o campaña</label>
+          <input 
+            id="campaignName" 
+            type="text" 
+            [(ngModel)]="campaignName" 
+            placeholder="Ej. Invitados Directores Q3">
+        </div>
+
+        <div class="form-group">
+          <label for="scheduledTime">Día y horario de la reunión</label>
+          <input 
+            id="scheduledTime" 
+            type="text" 
+            [(ngModel)]="scheduledTime" 
+            placeholder="Ej. Hoy, 16:30 o Mañana, 10:00">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="input-label">Subir lista de invitados (.CSV)</label>
+        <div 
+          class="dropzone" 
+          [class.dragover]="fileDragOver"
+          [class.has-file]="!!selectedFile"
+          (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave($event)"
+          (drop)="onDrop($event)">
+          
+          <input 
+            type="file" 
+            accept=".csv,text/csv,text/plain" 
+            (change)="onFileSelected($event)" 
+            class="file-input-hidden" 
+            #fileInput>
+
+          <div *ngIf="!selectedFile" class="dropzone-empty" (click)="fileInput.click()">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0D5A56" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <p><strong>Haz clic o arrastra aquí tu archivo .CSV</strong></p>
+            <span>Formato aceptado: líneas con <code>correo</code> o <code>nombre, correo</code></span>
+          </div>
+
+          <div *ngIf="selectedFile" class="dropzone-file-info">
+            <div class="file-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0D5A56" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+            </div>
+            <div class="file-details">
+              <span class="file-name">{{ selectedFile.name }}</span>
+              <span class="file-size">{{ (selectedFile.size / 1024).toFixed(1) }} KB</span>
+            </div>
+            <button type="button" class="btn-remove-file" (click)="removeSelectedFile()" title="Cambiar archivo">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-alert">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+        <div>
+          <strong>Información:</strong> La reunión se agendará en tu Agenda de Anfitrión y se enviará a cada correo un botón personalizado. Al hacer clic, entrarán directo a solicitar aprobación en la sala de espera.
+        </div>
+      </div>
+
+      <div class="error-alert" *ngIf="errorMessage">
+        <span>{{ errorMessage }}</span>
+      </div>
+
+    
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" (click)="onClose()">Cancelar</button>
+        <button 
+          type="button" 
+          class="btn btn-primary btn-submit" 
+          (click)="onSubmitOutreach()" 
+          [disabled]="isSubmitting">
+          <span *ngIf="!isSubmitting">Agendar y Enviar Invitaciones</span>
+          <span *ngIf="isSubmitting">Enviando invitaciones...</span>
+          <svg *ngIf="!isSubmitting" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+
+    <div class="modal-body success-body" *ngIf="successResponse">
+      <div class="success-icon-badge">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#0D5A56" stroke-width="2.5">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      </div>
+
+      <h3>¡Invitaciones Enviadas y Reunión Agendada!</h3>
+      <p class="success-desc">
+        La reunión <strong>"{{ successResponse.meetingTitle }}"</strong> (Código: <code>{{ successResponse.meetingCode }}</code>) ha sido agendada en tu Agenda de Anfitrión.
+      </p>
+
+      <div class="summary-box">
+        <div class="summary-item">
+          <span class="label">Total de correos procesados:</span>
+          <span class="val">{{ successResponse.totalContactos }}</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Código de acceso:</span>
+          <span class="val code-val">{{ successResponse.meetingCode }}</span>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" (click)="onClose()">Ir al Dashboard / Agenda</button>
+      </div>
+    </div>
+
+  </div>
+</div>

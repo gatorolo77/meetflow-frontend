@@ -1,0 +1,33 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Historial & Trazabilidad de Reuniones</h1>
+      <p class="page-subtitle">Consulta registros pasados, fechas, duración y métricas de tus videollamadas.</p>
+    </div>
+  </div>
+
+  <div class="card history-card">
+    <div class="history-list">
+      <div class="history-item" *ngFor="let item of pastMeetings">
+        <div class="icon-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+
+        <div class="history-info">
+          <h3>{{ item.title }}</h3>
+          <p>Código: {{ item.code }} • {{ item.participants }} Participantes</p>
+        </div>
+
+        <div class="history-meta">
+          <span class="date">{{ item.date }}</span>
+          <span class="dur">Duración: {{ item.duration }}</span>
+        </div>
+
+        <button class="btn btn-outline btn-sm">Ver Resumen</button>
+      </div>
+    </div>
+  </div>
+</div>

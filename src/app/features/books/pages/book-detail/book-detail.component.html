@@ -1,0 +1,225 @@
+<div class="bg-gray-50 text-gray-800 font-sans min-h-screen">
+
+    <!-- HEADER / NAVEGACIÓN COMPACTA -->
+    <header class="bg-[#FFE600] border-b border-[#E6CF00] shadow-sm sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-2.5 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a routerLink="/landing" class="flex items-center gap-3 group">
+                    <img src="assets/logi.png" alt="MercadoLibro Logo" class="h-16 w-auto object-contain transition duration-200 group-hover:scale-105">
+                    <span class="font-bold text-[#2A3375] flex flex-col text-2xl leading-none lowercase" style="font-family: 'Proxima Nova', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                        <span>mercado</span>
+                        <span>libro</span>
+                    </span>
+                </a>
+                <span class="text-[#2A3375]/40">|</span>
+                <a routerLink="/landing" class="text-xs text-[#2A3375] hover:text-blue-900 flex items-center gap-1 font-semibold transition cursor-pointer">
+                    <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Volver al listado
+                </a>
+            </div>
+            <div class="flex items-center gap-3">
+                <button class="p-2 text-gray-600 hover:text-amber-700 transition" title="Compartir">
+                    <i data-lucide="share-2" class="w-5 h-5"></i>
+                </button>
+                <button class="p-2 text-gray-600 hover:text-amber-700 transition" title="Guardar en favoritos">
+                    <i data-lucide="heart" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTENIDO DETALLE PRODUCTO -->
+    <main class="max-w-6xl mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
+            
+            <!-- Columna Izquierda: Imagen Portada Realista y Botón "Echar un vistazo" -->
+            <div class="flex flex-col items-center justify-center bg-amber-50/50 p-6 rounded-xl border border-gray-100 relative min-h-[420px]">
+                <div class="relative group">
+                    <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=600&q=80" 
+                         alt="Portada El Nombre del Viento" 
+                         class="w-52 h-80 object-cover rounded-lg shadow-xl mb-6 transform group-hover:scale-105 transition duration-300 border border-amber-900/10">
+                    <span class="absolute top-2 right-2 bg-amber-800 text-amber-50 text-[10px] uppercase font-bold px-2 py-0.5 rounded shadow">Best Seller</span>
+                </div>
+                <button class="bg-white border border-amber-600 text-amber-700 hover:bg-amber-50 text-xs font-semibold py-2.5 px-6 rounded-lg transition flex items-center gap-2 shadow-sm">
+                    <i data-lucide="book-open" class="w-4 h-4"></i> Echar un vistazo
+                </button>
+            </div>
+
+            <!-- Columna Derecha: Información del Producto -->
+            <div class="flex flex-col justify-between space-y-6">
+                
+                <div>
+                    <!-- Título, Autor e Idioma -->
+                    <h1 class="text-2xl md:text-3xl font-serif font-bold text-gray-900">El Nombre del Viento</h1>
+                    <p class="text-sm text-gray-600 mt-1">
+                        Por <a href="#" class="text-amber-700 hover:underline font-medium">Patrick Rothfuss</a> — Español (Traducción de Gemma Rovira)
+                    </p>
+                    
+                    <!-- Rating y Opiniones -->
+                    <div class="flex items-center gap-2 mt-3 text-sm">
+                        <span class="flex items-center text-amber-500 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200/60">
+                            ⭐ 4.8
+                        </span>
+                        <a href="#resenas" class="text-gray-500 hover:underline text-xs">(142 opiniones verificadas)</a>
+                    </div>
+                </div>
+
+                <!-- Variantes de Formato y Estado -->
+                <div class="space-y-3">
+                    <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Formato disponible:</label>
+                    <div class="flex flex-wrap gap-2">
+                        <button *for="let format of formats" 
+                                (click)="selectFormat(format.name)"
+                                [class]="format.isSelected ? 'border-2 border-amber-600 bg-amber-50 text-amber-900 text-xs font-medium py-1.5 px-3 rounded-lg shadow-sm' : 'border border-gray-300 text-gray-700 hover:border-gray-400 text-xs font-medium py-1.5 px-3 rounded-lg transition'">
+                            {{ format.name }}
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-600">Estado: <span class="font-medium text-emerald-700">Nuevo / Usado - Como Nuevo</span></p>
+                </div>
+
+                <!-- Precio y Envíos -->
+                <div class="border-t border-b border-gray-100 py-4 space-y-2">
+                    <div class="text-3xl font-bold text-amber-900 font-serif">
+                        {{ selectedFormat === 'Tapa Dura' ? '$38.200' : (selectedFormat === 'Digital (ePub)' ? '$12.900' : '$29.500') }}
+                    </div>
+                    
+                    <div class="text-xs text-gray-600 space-y-1.5 pt-1">
+                        <p class="flex items-center gap-1.5 text-emerald-700 font-medium">
+                            <i data-lucide="zap" class="w-4 h-4 text-emerald-600"></i> Llega mañana gratis con Envío Express
+                        </p>
+                        <p class="flex items-center gap-1.5">
+                            <i data-lucide="store" class="w-4 h-4 text-gray-500"></i> Retiro gratis en librería (Centro de Rosario)
+                        </p>
+                        <p class="flex items-center gap-1.5 pt-1">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span> Vendedor: <strong class="text-gray-800">Vendedor Platinum - Librería Anticuaria</strong> <span class="text-emerald-700 font-semibold">(99% positivo)</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button class="flex-1 bg-amber-700 hover:bg-amber-800 text-white font-medium py-3 px-4 rounded-xl shadow-md hover:shadow-lg transition text-center text-sm">
+                        Comprar Ahora
+                    </button>
+                    <button class="flex-1 bg-amber-100 hover:bg-amber-200 text-amber-900 font-medium py-3 px-4 rounded-xl transition text-center text-sm border border-amber-200">
+                        Añadir al carrito
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- SECCIÓN INFERIOR: Detalles Técnicos, Preguntas y Reseñas -->
+        <div class="mt-8 space-y-6">
+
+            <!-- Detalles Técnicos (Acordeón desplegable) -->
+            <details class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 group" open>
+                <summary class="font-serif font-bold text-gray-900 cursor-pointer flex justify-between items-center list-none select-none">
+                    <span class="text-lg">Detalles Técnicos & Sinopsis</span>
+                    <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transition group-open:rotate-180"></i>
+                </summary>
+                <div class="mt-4 text-sm text-gray-600 space-y-3 pt-3 border-t border-gray-100">
+                    <p class="leading-relaxed italic text-gray-700">"He robado princesas a reyes a los que nadie ha robado. Incendié la ciudad de Trebon. He pasado la noche con Felurian y he despertado vivo y cuerdo. Me expulsaron de la Universidad a una edad a la que a la mayoría no se les permite ni entrar. He recorrido caminos a la luz de la luna de los que otros no se atreven a hablar ni de día. He hablado con dioses, he amado a mujeres y he escrito canciones que hacen llorar a los bardos. Me llamo Kvothe. Quizá hayas oído hablar de mí."</p>
+                    <div class="bg-amber-50/60 p-4 rounded-xl border border-amber-100">
+                        <ul class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                            <li><strong class="text-gray-900">Editorial:</strong> Plaza & Janés (Penguin Random House)</li>
+                            <li><strong class="text-gray-900">Año de edición:</strong> 2009</li>
+                            <li><strong class="text-gray-900">Páginas:</strong> 880 páginas</li>
+                            <li><strong class="text-gray-900">ISBN:</strong> 9788401352835</li>
+                            <li><strong class="text-gray-900">Encuadernación:</strong> Rústica con solapas</li>
+                            <li><strong class="text-gray-900">Dimensiones:</strong> 15 x 23 cm</li>
+                        </ul>
+                    </div>
+                </div>
+            </details>
+
+            <!-- Preguntas al vendedor -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <h3 class="font-serif font-bold text-gray-900 text-lg mb-4">Preguntas al vendedor</h3>
+                <div class="flex gap-2 mb-6">
+                    <input type="text" 
+                           [(ngModel)]="newQuestionText"
+                           (keyup.enter)="addQuestion()"
+                           placeholder="Escribí tu pregunta..." 
+                           class="flex-1 text-sm bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:border-amber-600 focus:bg-white transition">
+                    <button (click)="addQuestion()" class="bg-gray-900 text-white text-xs font-semibold px-5 py-2.5 rounded-lg hover:bg-gray-800 transition">
+                        Preguntar
+                    </button>
+                </div>
+                <div class="space-y-3 text-xs text-gray-600">
+                    <div *ngFor="let q of questions" class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                        <p class="font-semibold text-gray-800 flex items-center gap-1.5">
+                            <i data-lucide="help-circle" class="w-4 h-4 text-amber-700"></i> {{ q.question }}
+                        </p>
+                        <p class="text-gray-600 mt-2 pl-5 border-l-2 border-amber-600">
+                            {{ q.answer }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reseñas con fotos mockeadas -->
+            <div id="resenas" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <h3 class="font-serif font-bold text-gray-900 text-lg mb-4">Reseñas del producto</h3>
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="text-4xl font-bold font-serif text-amber-900">4.8</div>
+                    <div>
+                        <div class="text-amber-500 text-lg">⭐⭐⭐⭐⭐</div>
+                        <p class="text-xs text-gray-500 mt-0.5">Basado en 142 opiniones y fotos reales de compradores</p>
+                    </div>
+                </div>
+
+                <!-- Mini galería de reseñas con fotos mockeadas de alta resolución -->
+                <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Fotos enviadas por los lectores:</h4>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                    <div class="relative group h-32 rounded-xl overflow-hidden shadow-sm border border-gray-200">
+                        <img src="https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=300&q=80" 
+                             alt="Foto Reseña 1" 
+                             class="w-full h-full object-cover group-hover:scale-110 transition duration-300">
+                        <span class="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded">Mateo R.</span>
+                    </div>
+                    <div class="relative group h-32 rounded-xl overflow-hidden shadow-sm border border-gray-200">
+                        <img src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=300&q=80" 
+                             alt="Foto Reseña 2" 
+                             class="w-full h-full object-cover group-hover:scale-110 transition duration-300">
+                        <span class="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded">Camila S.</span>
+                    </div>
+                    <div class="relative group h-32 rounded-xl overflow-hidden shadow-sm border border-gray-200">
+                        <img src="https://images.unsplash.com/photo-1495446815901-a7297e633e8d?auto=format&fit=crop&w=300&q=80" 
+                             alt="Foto Reseña 3" 
+                             class="w-full h-full object-cover group-hover:scale-110 transition duration-300">
+                        <span class="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded">Lucía G.</span>
+                    </div>
+                    <div class="relative group h-32 rounded-xl overflow-hidden shadow-sm border border-gray-200">
+                        <img src="https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=300&q=80" 
+                             alt="Foto Reseña 4" 
+                             class="w-full h-full object-cover group-hover:scale-110 transition duration-300">
+                        <span class="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded">Joaquín P.</span>
+                    </div>
+                </div>
+
+                <!-- Opinión destacada -->
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 text-xs text-gray-700 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-gray-900">Excelente libro, calidad impecable</span>
+                        <span class="text-amber-500">⭐⭐⭐⭐⭐</span>
+                    </div>
+                    <p class="text-gray-600">"Llegó rapidísimo a Rosario. La calidad de la edición es fabulosa y la historia atrapa desde el primer capítulo. ¡Muy recomendado para fans de la fantasía épica!"</p>
+                    <span class="text-[10px] text-gray-400 block">Comprado hace 3 días</span>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- BOTÓN FLOTANTE CHATROOM / MEETFLOW -->
+    <div class="fixed bottom-6 right-6 z-50 group">
+        <a routerLink="/dashboard" class="relative flex items-center justify-center cursor-pointer transition transform hover:scale-110 active:scale-95 block drop-shadow-xl" title="Ir a MeetFlow">
+            <img src="assets/chatroom.png" alt="Ir a MeetFlow" class="w-24 h-24 md:w-32 md:h-32 aspect-square object-contain rounded-full border-4 border-amber-500 bg-white p-1.5 md:p-2 shadow-2xl ring-4 ring-amber-200/60 transition duration-300 group-hover:border-amber-600">
+            <span class="absolute -top-9 right-0 bg-gray-900 text-white text-[11px] font-semibold px-3 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition duration-200 whitespace-nowrap shadow-lg pointer-events-none">
+                Ir a MeetFlow 💬
+            </span>
+        </a>
+    </div>
+
+</div>

@@ -1,0 +1,143 @@
+.widget-card {
+  margin-bottom: 0;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  border-radius: 20px;
+}
+
+.widget-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.header-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.widget-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #FFFFFF !important;
+  letter-spacing: -0.2px;
+}
+
+.link-more {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #F8F4EC !important;
+  text-decoration: none;
+}
+
+.link-more:hover {
+  text-decoration: underline;
+}
+
+.requests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.request-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: rgba(0, 0, 0, 0.22) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  transition: all 0.2s ease;
+}
+
+.request-item:hover {
+  background: rgba(0, 0, 0, 0.35) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+}
+
+.user-avatar img {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-pill);
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+}
+
+.request-info {
+  flex: 1;
+}
+
+.user-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #FFFFFF !important;
+  margin-bottom: 1px;
+}
+
+.target-meeting {
+  font-size: 0.74rem;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.request-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.action-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.btn-approve {
+  background-color: #FFFFFF;
+  color: var(--color-success);
+  border-color: #BBF7D0;
+}
+
+.btn-approve:hover {
+  background-color: var(--color-success);
+  color: #FFFFFF;
+}
+
+.btn-reject {
+  background-color: #FFFFFF;
+  color: var(--color-danger);
+  border-color: #FCA5A5;
+}
+
+.btn-reject:hover {
+  background-color: var(--color-danger);
+  color: #FFFFFF;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.9) !important;
+  gap: 8px;
+  font-size: 0.82rem;
+  flex: 1;
+}

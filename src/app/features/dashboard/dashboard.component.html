@@ -1,0 +1,39 @@
+<div class="dashboard-wrapper">
+  <app-welcome-banner 
+    (newMeetingRequested)="openNewMeetingModal('CREATE')"
+    (outreachRequested)="openOutreachModal()">
+  </app-welcome-banner>
+
+  <div class="dashboard-4cards-deck">
+    <div class="deck-card-wrapper card-canyons">
+      <app-join-requests-widget></app-join-requests-widget>
+    </div>
+
+    <div class="deck-card-wrapper card-beaches">
+      <app-live-metrics [metrics]="(liveMetrics$ | async)!"></app-live-metrics>
+    </div>
+
+    <div class="deck-card-wrapper card-trees">
+      <app-system-status-widget></app-system-status-widget>
+    </div>
+
+    <div class="deck-card-wrapper card-lakes">
+      <app-recent-activity
+        [activities]="(recentActivities$ | async) || []"
+      ></app-recent-activity>
+    </div>
+  </div>
+</div>
+
+<app-new-meeting-modal
+  *ngIf="showNewMeetingModal"
+  [initialTab]="modalInitialTab"
+  (closed)="closeNewMeetingModal()"
+>
+</app-new-meeting-modal>
+
+<app-outreach-modal
+  *ngIf="showOutreachModal"
+  (closed)="closeOutreachModal()"
+>
+</app-outreach-modal>

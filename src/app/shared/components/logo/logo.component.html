@@ -1,0 +1,44 @@
+<div class="logo-container" [ngClass]="size">
+  <!-- Isotipo Vectorial M Cúbico Isométrico (Basado en el nuevo logo oficial) -->
+  <svg class="logo-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Fondos y Facetas Isométricas con Gradientes Teal -->
+    <defs>
+      <linearGradient id="mGradLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#127872"/>
+        <stop offset="100%" stop-color="#0B4B48"/>
+      </linearGradient>
+      <linearGradient id="mGradRight" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#0D5A56"/>
+        <stop offset="100%" stop-color="#063634"/>
+      </linearGradient>
+      <linearGradient id="mGradTop" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#1AB8B0" stop-opacity="0.9"/>
+        <stop offset="100%" stop-color="#0F6E68" stop-opacity="0.95"/>
+      </linearGradient>
+    </defs>
+
+    <!-- Silueta Externa del Cubo Hexagonal -->
+    <path d="M24 3L42 13.5V34.5L24 45L6 34.5V13.5L24 3Z" fill="url(#mGradRight)" opacity="0.15"/>
+
+    <!-- Estructura de la 'M' Geométrica 3D -->
+    <!-- Brazo Izquierdo -->
+    <path d="M6 13.5L24 24V45L6 34.5V13.5Z" fill="url(#mGradLeft)"/>
+    <!-- Brazo Derecho -->
+    <path d="M42 13.5L24 24V45L42 34.5V13.5Z" fill="url(#mGradRight)"/>
+    <!-- Cresta y Pliegue Central de la M -->
+    <path d="M24 3L42 13.5L24 24L6 13.5L24 3Z" fill="url(#mGradTop)"/>
+    <path d="M24 14L33 19.25L24 34L15 19.25L24 14Z" fill="#F8F4EC" opacity="0.95"/>
+    <path d="M24 18L30 21.5L24 31L18 21.5L24 18Z" fill="url(#mGradLeft)"/>
+  </svg>
+
+  <!-- Tipografía MEET + FLOW -->
+  <div class="logo-text-block">
+    <div class="logo-typography">
+      <span class="text-meet">MEET</span>
+      <span class="text-flow">FLOW</span>
+    </div>
+    <span class="logo-tagline" *ngIf="showTagline">
+      Plataforma de reuniones de video en tiempo real
+    </span>
+  </div>
+</div>

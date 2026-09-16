@@ -1,0 +1,236 @@
+/* ==========================================================================
+   MEETFLOW DESIGN SYSTEM & GLOBAL STYLES
+   Mobile-First Architecture: Warm Sand, Leather (Cognac) & Deep Teal
+   ========================================================================== */
+
+:root {
+  /* Warm Sand Base */
+  --bg-sand: #F2ECE0;             /* Tono arena cálido y natural */
+  --bg-sand-light: #F8F4EC;       /* Crema arena suave */
+  --bg-card: #FFFFFF;
+
+  /* Leather / Cuero (Cognac Sutil y Elegante) */
+  --leather-primary: #A4613B;     /* Cuero marrón cognac noble */
+  --leather-hover: #8A4E2B;       /* Cuero oscuro al pasar el cursor */
+  --leather-light: #F7EFE8;       /* Fondo cuero muy suave/pastel */
+  --leather-border: #E5D1C4;      /* Borde sutil cuero */
+  --leather-subtle-bg: #F3E8DF;
+
+  /* Deep Teal (Contraste Armónico Frío/Cálido) */
+  --teal-primary: #0D5A56;
+  --teal-primary-hover: #084643;
+  --teal-primary-active: #053533;
+  --teal-light: #E4F1F0;
+  --teal-light-hover: #D5ECEB;
+  --teal-border: #B6D8D6;
+
+  /* Text & Neutrals */
+  --text-main: #1D2A2A;
+  --text-muted: #627372;
+  --text-light: #90A09F;
+
+  --border-color: #E2D8CC;        /* Borde arena con toque tierra */
+  --border-subtle: #EDE4D8;
+
+  /* Status Colors */
+  --color-success: #15803D;
+  --color-success-bg: #E6F4EA;
+  --color-success-border: #BBF7D0;
+
+  --color-danger: #DC2626;
+  --color-danger-bg: #FEE2E2;
+  --color-danger-border: #FCA5A5;
+
+  --color-warning: #D97706;
+  --color-warning-bg: #FEF3C7;
+
+  /* Geometry & Elevation */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-pill: 9999px;
+
+  --shadow-sm: 0 2px 5px rgba(164, 97, 59, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-md: 0 6px 16px rgba(164, 97, 59, 0.06), 0 2px 6px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 12px 28px rgba(164, 97, 59, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+
+  --font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+
+  --sidebar-width: 260px;
+  --topbar-height: 64px;
+}
+
+/* CSS Reset & Base */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  font-family: var(--font-family);
+  background-color: var(--bg-sand);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+}
+
+app-root {
+  display: block;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  touch-action: manipulation;
+}
+
+input, select, textarea {
+  font-family: inherit;
+}
+
+/* Utility Classes */
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  padding: 16px;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+  max-width: 100%;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: #D6C9B9;
+}
+
+/* Mobile Touch Target Guidelines (Min 44px) */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  min-height: 44px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  white-space: normal;
+  max-width: 100%;
+}
+
+.btn-primary {
+  background-color: var(--teal-primary);
+  color: #FFFFFF;
+}
+
+.btn-primary:hover, .btn-primary:active {
+  background-color: var(--teal-primary-hover);
+  box-shadow: 0 4px 12px rgba(13, 90, 86, 0.25);
+}
+
+.btn-leather {
+  background-color: var(--leather-primary);
+  color: #FFFFFF;
+}
+
+.btn-leather:hover, .btn-leather:active {
+  background-color: var(--leather-hover);
+  box-shadow: 0 4px 12px rgba(164, 97, 59, 0.25);
+}
+
+.btn-secondary {
+  background-color: var(--teal-light);
+  color: var(--teal-primary);
+  border: 1px solid var(--teal-border);
+}
+
+.btn-secondary:hover {
+  background-color: var(--teal-light-hover);
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+}
+
+.btn-outline:hover {
+  background-color: var(--bg-sand-light);
+  border-color: var(--leather-border);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.badge-teal {
+  background-color: var(--teal-primary);
+  color: #FFFFFF;
+}
+
+.badge-leather {
+  background-color: var(--leather-light);
+  color: var(--leather-primary);
+  border: 1px solid var(--leather-border);
+}
+
+.badge-success {
+  background-color: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.badge-danger {
+  background-color: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-sand);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #C9BEAF;
+  border-radius: var(--radius-pill);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #A4613B;
+}
+
+/* Global Mobile Media Queries */
+@media (max-width: 768px) {
+  :root {
+    --topbar-height: 56px;
+  }
+
+  .card {
+    border-radius: var(--radius-md);
+    padding: 14px;
+  }
+}

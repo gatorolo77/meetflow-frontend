@@ -1,0 +1,130 @@
+<div class="modal-backdrop" (click)="onCancel()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="header-info">
+        <div class="modal-icon-badge">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+            <line x1="12" y1="19" x2="12" y2="23"></line>
+          </svg>
+        </div>
+        <div>
+          <h2 class="modal-title">Comprobación de Hardware Pre-Vuelo</h2>
+          <p class="modal-subtitle">Revisa tu cámara, nivel de micrófono y encuadre antes de entrar a: <strong>{{ meetingTitle }}</strong></p>
+        </div>
+      </div>
+
+      <button class="close-btn" (click)="onCancel()" title="Cerrar modal">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Body Container -->
+    <div class="modal-body">
+      <!-- Live Video Preview & Audio Meter Box -->
+      <div class="test-preview-box" [class.camera-off]="!isCamActive">
+        <video #videoPreview autoplay muted playsinline class="video-preview-feed" *ngIf="isCamActive"></video>
+
+        <!-- Camera Off Placeholder -->
+        <div class="cam-off-placeholder" *ngIf="!isCamActive">
+          <img [src]="userAvatarUrl" [alt]="userName">
+          <span>Cámara desactivada</span>
+        </div>
+
+        <!-- Audio Level Meter Overlay -->
+        <div class="audio-meter-overlay">
+          <div class="audio-meter-info">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+            </svg>
+            <span>Nivel de voz:</span>
+          </div>
+
+          <div class="audio-progress-bar">
+            <div class="audio-progress-fill" [style.width.%]="audioLevel"></div>
+          </div>
+        </div>
+      <!-- Guest Name Input Field -->
+      <div class="guest-name-field-box">
+        <label for="modalGuestName" class="name-label">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          Tu Nombre para la Reunión <span class="required-star">*</span>
+        </label>
+        <input 
+          id="modalGuestName"
+          type="text" 
+          [(ngModel)]="userNameInput" 
+          (input)="onNameChanged()"
+          placeholder="Ingresa tu nombre completo (ej. María López)..." 
+          class="guest-name-input"
+          required
+        />
+      </div>
+
+      <!-- Control Toggles -->
+      <div class="toggle-buttons-row">
+        <button class="btn toggle-btn" [class.active]="isMicActive" [class.danger]="!isMicActive" (click)="toggleMic()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+          </svg>
+          <span>Micrófono: {{ isMicActive ? 'Encendido' : 'Silenciado' }}</span>
+        </button>
+
+        <button class="btn toggle-btn" [class.active]="isCamActive" [class.danger]="!isCamActive" (click)="toggleCam()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="23 7 16 12 23 17 23 7"></polygon>
+            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+          </svg>
+          <span>Cámara: {{ isCamActive ? 'Encendida' : 'Apagada' }}</span>
+        </button>
+      </div>
+
+      <!-- Device Selection Dropdowns -->
+      <div class="device-selectors">
+        <div class="form-group" *ngIf="availableCams.length > 0">
+          <label>Seleccionar Cámara</label>
+          <select [(ngModel)]="selectedCamId" (change)="startHardwareTest()">
+            <option *ngFor="let c of availableCams" [value]="c.deviceId">{{ c.label || 'Cámara Predeterminada' }}</option>
+          </select>
+        </div>
+
+        <div class="form-group" *ngIf="availableMics.length > 0">
+          <label>Seleccionar Micrófono</label>
+          <select [(ngModel)]="selectedMicId" (change)="startHardwareTest()">
+            <option *ngFor="let m of availableMics" [value]="m.deviceId">{{ m.label || 'Micrófono Predeterminado' }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Actions -->
+    <div class="modal-footer">
+      <button class="btn btn-external-test" (click)="openExternalTest()" title="Abrir comprobador externo Screendesk en nueva pestaña">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+          <polyline points="15 3 21 3 21 9"></polyline>
+          <line x1="10" y1="14" x2="21" y2="3"></line>
+        </svg>
+        <span>Probar en Web Externa</span>
+      </button>
+
+      <div class="footer-right-actions">
+        <button class="btn btn-outline" (click)="onCancel()">Cancelar</button>
+        <button class="btn btn-primary btn-join-now" (click)="onJoinConfirmed()">
+          <span>🚀 Todo Listo - Unirse a la Sala</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

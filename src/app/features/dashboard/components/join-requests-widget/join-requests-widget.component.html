@@ -1,0 +1,47 @@
+<section class="card widget-card">
+  <div class="widget-header">
+    <div class="header-title-group">
+      <h3 class="widget-title">Sala de Espera</h3>
+      <span class="badge badge-teal" *ngIf="(pendingRequests$ | async) as requests">
+        {{ requests.length }}
+      </span>
+    </div>
+    <a routerLink="/solicitudes" class="link-more">Ver todas &gt;</a>
+  </div>
+
+  <div class="requests-list" *ngIf="(pendingRequests$ | async) as requests">
+    <div class="request-item" *ngFor="let req of requests">
+      <div class="user-avatar">
+        <img [src]="req.avatarUrl || ('https://ui-avatars.com/api/?name=' + req.userName + '&background=E7F1F0&color=0F5A56&bold=true')" [alt]="req.userName">
+      </div>
+      
+      <div class="request-info">
+        <h4 class="user-name">{{ req.userName }}</h4>
+        <span class="target-meeting">{{ req.targetMeetingTitle }}</span>
+      </div>
+
+      <div class="request-actions">
+        <button class="action-btn btn-approve" (click)="onApprove(req.id)" title="Aprobar ingreso">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </button>
+
+        <button class="action-btn btn-reject" (click)="onReject(req.id)" title="Rechazar ingreso">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="requests.length === 0">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+      <p>No hay solicitudes pendientes en este momento.</p>
+    </div>
+  </div>
+</section>

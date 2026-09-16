@@ -1,0 +1,72 @@
+.logo-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  user-select: none;
+}
+
+.logo-icon {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 4px rgba(13, 90, 86, 0.15));
+}
+
+.logo-text-block {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.logo-typography {
+  display: flex;
+  align-items: center;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+
+.text-meet {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0F2432;
+}
+
+.text-flow {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--teal-primary);
+}
+
+.logo-tagline {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-top: 3px;
+  letter-spacing: -0.2px;
+}
+
+/* Size Variants */
+.small .logo-icon {
+  width: 26px;
+  height: 26px;
+}
+.small .text-meet,
+.small .text-flow {
+  font-size: 1.05rem;
+}
+.small .logo-tagline {
+  font-size: 0.65rem;
+}
+
+.large .logo-icon {
+  width: 48px;
+  height: 48px;
+}
+.large .text-meet,
+.large .text-flow {
+  font-size: 1.75rem;
+}
+.large .logo-tagline {
+  font-size: 0.85rem;
+}

@@ -1,0 +1,708 @@
+<div class="meeting-viewport-bg">
+  <div class="ended-modal-backdrop" *ngIf="showMeetingEndedModal">
+    <div class="ended-modal-card">
+      <div class="ended-icon-wrapper">
+        <svg
+          width="40"
+          height="40"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#E53E3E"
+          stroke-width="2"
+        >
+          <path
+            d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-6-6 19.8 19.8 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91"
+          ></path>
+        </svg>
+      </div>
+      <h3 class="ended-title">Reunión Finalizada</h3>
+      <p class="ended-desc">
+        {{
+          isHostEnding
+            ? "Has finalizado la reunión para todos los participantes."
+            : "El anfitrión ha finalizado la reunión."
+        }}
+      </p>
+      <button class="btn-ended-confirm" (click)="confirmMeetingEnded()">
+        Volver al Inicio
+      </button>
+    </div>
+  </div>
+
+  <div
+    class="toast-notifications-container"
+    *ngIf="pendingRequestsForRoom.length > 0"
+  >
+    <div
+      class="in-meeting-request-toast"
+      *ngFor="let req of pendingRequestsForRoom"
+    >
+      <div class="toast-user-info">
+        <img
+          [src]="
+            req.avatarUrl ||
+            'https://ui-avatars.com/api/?name=' +
+              req.userName +
+              '&background=0D5A56&color=ffffff&bold=true'
+          "
+          [alt]="req.userName"
+          class="toast-avatar"
+        />
+        <div class="toast-text">
+          <span class="toast-name">{{ req.userName }}</span>
+          <span class="toast-desc">solicita unirse a esta reunión</span>
+        </div>
+      </div>
+      <div class="toast-actions">
+        <button class="btn-toast-admit" (click)="admitGuest(req.id)">
+          Admitir
+        </button>
+        <button class="btn-toast-reject" (click)="rejectGuest(req.id)">
+          Rechazar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="meeting-wrapper-card">
+    <header class="meet-header">
+      <div class="header-left">
+        <app-logo size="small"></app-logo>
+        <div class="meeting-title-block">
+          <svg
+            class="shield-icon"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          <div class="title-meta">
+            <div class="title-row">
+              <h2 class="meet-title">{{ meetingTitle }}</h2>
+              <span class="count-badge">{{ participantsList.length }}</span>
+            </div>
+            <div class="code-copy-row">
+              <span class="meet-id"
+                >ID de reunión: <strong>{{ meetingId }}</strong></span
+              >
+              <button
+                class="btn-copy-code"
+                (click)="copyMeetingCode()"
+                title="Copiar código de invitación"
+              >
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path
+                    d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                  ></path>
+                </svg>
+                <span>{{
+                  copiedCodeSuccess ? "¡Copiado!" : "Copiar Código"
+                }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="status-group">
+          <span class="live-status-pill">
+            <span class="green-dot"></span> En reunión
+          </span>
+          <span class="timer-display">{{ timerText }}</span>
+        </div>
+
+        <div class="header-action-icons">
+          <button
+            class="icon-tool-btn"
+            [class.active]="showParticipants"
+            (click)="toggleParticipants()"
+            title="Participantes"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            <span class="icon-count">{{ participantsList.length }}</span>
+          </button>
+
+          <button
+            class="icon-tool-btn"
+            [class.active]="showChat"
+            (click)="toggleChat()"
+            title="Chat"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+              ></path>
+            </svg>
+          </button>
+
+          <button
+            class="icon-tool-btn"
+            [class.active]="isSharingScreen"
+            (click)="toggleScreenShare()"
+            title="Compartir pantalla"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+          </button>
+
+          <button
+            *ngIf="isHost"
+            class="icon-tool-btn icon-waiting-room-btn"
+            [class.active]="showWaitingRoomPanel"
+            (click)="toggleWaitingRoom()"
+            title="Sala de Espera"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            <span
+              class="header-waiting-badge"
+              *ngIf="pendingRequestsForRoom.length > 0"
+            >
+              {{ pendingRequestsForRoom.length }}
+            </span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="meet-main-layout" [class.no-sidebar]="!showParticipants && !showChat && (!isHost || !showWaitingRoomPanel)">
+      <main class="meet-left-canvas">
+        <div class="pip-stage-viewport">
+          
+      
+          <div class="spotlight-main-card">
+            <video
+              *ngIf="getParticipantStream(spotlightParticipant || hostParticipant)"
+              [srcObject]="getParticipantStream(spotlightParticipant || hostParticipant)"
+              autoplay
+              muted
+              playsinline
+              class="spotlight-feed-media"
+            ></video>
+            <img
+              *ngIf="!getParticipantStream(spotlightParticipant || hostParticipant)"
+              [src]="spotlightParticipant?.avatar || hostParticipant.avatar"
+              [alt]="spotlightParticipant?.name || hostParticipant.name"
+              class="spotlight-feed-media"
+            />
+
+            <div class="spotlight-header-badge">
+              <span class="spotlight-live-dot"></span>
+              <span class="spotlight-badge-title">EN PRIMER PLANO:</span>
+              <strong class="spotlight-speaker-name">{{ spotlightParticipant?.name || hostParticipant.name }}</strong>
+              <span class="spotlight-role-tag">({{ spotlightParticipant?.role || 'Hablante' }})</span>
+            </div>
+
+            <div class="spotlight-bottom-badge">
+              <span class="spotlight-name-text">{{ spotlightParticipant?.name || hostParticipant.name }}</span>
+              <span class="mic-icon-pill" [class.muted]="!spotlightParticipant?.isMic">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path *ngIf="spotlightParticipant?.isMic" d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                  <line *ngIf="!spotlightParticipant?.isMic" x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+              </span>
+            </div>
+          </div>
+
+      
+          <div class="pip-host-floating-card" 
+               [class.active-spotlight]="spotlightParticipant?.name === hostParticipant.name"
+               [class.host-clickable]="isHost"
+               (click)="setSpotlight(hostParticipant)"
+               [title]="isHost ? 'Click para colocar al Anfitrión en primer plano' : hostParticipant.name">
+            <div class="pip-card-badge-host">👑 Anfitrión</div>
+            <video
+              *ngIf="getParticipantStream(hostParticipant)"
+              [srcObject]="getParticipantStream(hostParticipant)"
+              autoplay
+              muted
+              playsinline
+              class="pip-feed-media"
+            ></video>
+            <img
+              *ngIf="!getParticipantStream(hostParticipant)"
+              [src]="hostParticipant.avatar"
+              [alt]="hostParticipant.name"
+              class="pip-feed-media"
+            />
+            <div class="pip-card-footer">
+              <span class="pip-name">{{ hostParticipant.name }}</span>
+              <span class="pip-mic-dot" [class.muted]="isHost ? isMicMuted : !hostParticipant.isMic"></span>
+            </div>
+          </div>
+
+          <div class="pip-guests-floating-panel">
+            <div class="pip-panel-title">
+              <span>Invitados</span>
+              <span class="hint-click-text" *ngIf="isHost">(Click para dar la palabra)</span>
+            </div>
+
+            <div class="pip-guests-grid">
+              <div *ngFor="let guest of guestParticipants"
+                   class="pip-guest-card"
+                   [class.active-spotlight]="spotlightParticipant?.name === guest.name"
+                   [class.has-queue-order]="getQueuePosition(guest.name) > 0 && spotlightParticipant?.name !== guest.name"
+                   [class.host-clickable]="isHost"
+                   [style.borderColor]="getQueuePosition(guest.name) > 0 && spotlightParticipant?.name !== guest.name ? getQueueColor(guest.name) : null"
+                   [style.boxShadow]="getQueuePosition(guest.name) > 0 && spotlightParticipant?.name !== guest.name ? '0 0 16px ' + getQueueColor(guest.name) : null"
+                   (click)="setSpotlight(guest)"
+                   [title]="isHost ? (getQueuePosition(guest.name) > 0 ? 'Turno #' + getQueuePosition(guest.name) + ' - Click para otorgar la palabra' : 'Click para otorgar la palabra a ' + guest.name) : guest.name">
+                <video
+                  *ngIf="getParticipantStream(guest)"
+                  [srcObject]="getParticipantStream(guest)"
+                  autoplay
+                  muted
+                  playsinline
+                  class="pip-feed-media"
+                ></video>
+                <img
+                  *ngIf="!getParticipantStream(guest)"
+                  [src]="guest.avatar"
+                  [alt]="guest.name"
+                  class="pip-feed-media"
+                />
+                
+     
+                <div class="pip-spotlight-active-indicator" *ngIf="spotlightParticipant?.name === guest.name">
+                  <span>En foco 🎙️</span>
+                </div>
+
+     
+                <div class="pip-queue-badge" 
+                     *ngIf="getQueuePosition(guest.name) > 0 && spotlightParticipant?.name !== guest.name"
+                     [style.backgroundColor]="getQueueColor(guest.name)">
+                  <span>🖐️ #{{ getQueuePosition(guest.name) }}</span>
+                </div>
+
+                <div class="pip-card-footer">
+                  <span class="pip-name">{{ guest.name }}</span>
+                  <span class="pip-mic-dot" [class.muted]="!guest.isMic"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="bottom-controls-bar">
+          <div class="controls-center-group">
+            <button
+              class="pill-control-btn"
+              [class.danger]="isMicMuted"
+              (click)="toggleMic()"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  *ngIf="!isMicMuted"
+                  d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"
+                ></path>
+                <line *ngIf="isMicMuted" x1="1" y1="1" x2="23" y2="23"></line>
+              </svg>
+              <span class="arrow-down">˅</span>
+            </button>
+
+            <button
+              class="pill-control-btn"
+              [class.danger]="isCameraOff"
+              (click)="toggleCamera()"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+              </svg>
+              <span class="arrow-down">˅</span>
+            </button>
+
+            <button
+              class="pill-control-btn"
+              [class.active-teal]="isSharingScreen"
+              (click)="toggleScreenShare()"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+              <span class="arrow-down">˅</span>
+            </button>
+
+            <button
+              class="pill-control-btn"
+              [class.active-teal]="showParticipants"
+              (click)="toggleParticipants()"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+              </svg>
+              <span class="arrow-down">˅</span>
+            </button>
+
+            <button
+              class="pill-control-btn"
+              [class.active-teal]="showChat"
+              (click)="toggleChat()"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                ></path>
+              </svg>
+            </button>
+
+            <button
+              *ngIf="!isHost"
+              class="pill-control-btn btn-raise-hand-pill"
+              [class.active-raised]="getQueuePosition(currentUserName) > 0"
+              [style.backgroundColor]="getQueuePosition(currentUserName) > 0 ? getQueueColor(currentUserName) : null"
+              (click)="toggleMyRequestToSpeak()"
+              [title]="getQueuePosition(currentUserName) > 0 ? 'Cancelar mi pedido de palabra (Turno #' + getQueuePosition(currentUserName) + ')' : 'Pedir la palabra'"
+            >
+              <span class="hand-icon">🖐️</span>
+              <span class="hand-tag" *ngIf="getQueuePosition(currentUserName) > 0">#{{ getQueuePosition(currentUserName) }}</span>
+            </button>
+
+            <button class="pill-control-btn">
+              <span class="more-dots">• • •</span>
+            </button>
+          </div>
+
+          <button
+            class="pill-end-call-btn"
+            (click)="leaveMeeting()"
+            title="Finalizar llamada"
+          >
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-6-6 19.8 19.8 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91"
+              ></path>
+            </svg>
+          </button>
+        </div>
+      </main>
+
+      <aside class="meet-right-sidebar" *ngIf="showParticipants || showChat || (showWaitingRoomPanel && isHost)">
+        <div
+          class="sidebar-card-panel waiting-room-panel"
+          *ngIf="showWaitingRoomPanel && isHost"
+        >
+          <div class="panel-header">
+            <div class="panel-title-with-badge">
+              <h3>Sala de Espera</h3>
+              <span class="waiting-count-tag" *ngIf="pendingRequestsForRoom.length > 0">
+                {{ pendingRequestsForRoom.length }}
+              </span>
+            </div>
+            <button class="collapse-btn" (click)="toggleWaitingRoom()" title="Cerrar panel">✕</button>
+          </div>
+
+          <div class="waiting-room-scroll">
+            <div *ngIf="pendingRequestsForRoom.length === 0" class="empty-waiting-room">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              <p>No hay personas esperando para ingresar</p>
+            </div>
+
+            <div
+              class="pending-participant-row"
+              *ngFor="let req of pendingRequestsForRoom"
+            >
+              <img
+                [src]="
+                  req.avatarUrl ||
+                  'https://ui-avatars.com/api/?name=' +
+                    req.userName +
+                    '&background=0284C7&color=ffffff&bold=true'
+                "
+                [alt]="req.userName"
+                class="part-avatar"
+              />
+              <div class="part-info">
+                <span class="part-name">{{ req.userName }}</span>
+                <span class="part-role waiting-role">En sala de espera</span>
+              </div>
+              <div class="part-actions">
+                <button
+                  class="btn-side-admit"
+                  (click)="admitGuest(req.id)"
+                  title="Admitir en la reunión"
+                >
+                  ✓
+                </button>
+                <button
+                  class="btn-side-reject"
+                  (click)="rejectGuest(req.id)"
+                  title="Rechazar ingreso"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="sidebar-card-panel participants-panel"
+          *ngIf="showParticipants"
+        >
+          <div class="panel-header">
+            <h3>Participantes ({{ participantsList.length }})</h3>
+            <button class="add-participant-btn" title="Invitar participante">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="8.5" cy="7" r="4"></circle>
+                <line x1="20" y1="8" x2="20" y2="14"></line>
+                <line x1="23" y1="11" x2="17" y2="11"></line>
+              </svg>
+            </button>
+          </div>
+
+          <div
+            class="pending-requests-section"
+            *ngIf="pendingRequestsForRoom.length > 0"
+          >
+            <span class="pending-section-badge"
+              >En espera de ingreso ({{ pendingRequestsForRoom.length }})</span
+            >
+            <div
+              class="pending-participant-row"
+              *ngFor="let req of pendingRequestsForRoom"
+            >
+              <img
+                [src]="
+                  req.avatarUrl ||
+                  'https://ui-avatars.com/api/?name=' +
+                    req.userName +
+                    '&background=0284C7&color=ffffff&bold=true'
+                "
+                [alt]="req.userName"
+                class="part-avatar"
+              />
+              <div class="part-info">
+                <span class="part-name">{{ req.userName }}</span>
+                <span class="part-role waiting-role">Solicitando...</span>
+              </div>
+              <div class="part-actions">
+                <button
+                  class="btn-side-admit"
+                  (click)="admitGuest(req.id)"
+                  title="Admitir invitado"
+                >
+                  ✓
+                </button>
+                <button
+                  class="btn-side-reject"
+                  (click)="rejectGuest(req.id)"
+                  title="Rechazar invitado"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          </div>
+
+            <div class="participant-row" *ngFor="let p of participantsList">
+              <img [src]="p.avatar" [alt]="p.name" class="part-avatar" />
+              <div class="part-info">
+                <span class="part-name">{{ p.name }}</span>
+                <span class="part-role">{{ p.role }}</span>
+              </div>
+
+              <!-- Indicador / Botón de Pedir Palabra -->
+              <ng-container *ngIf="p.role !== 'Anfitrión'">
+                <!-- Si es el propio usuario: botón interactivo para pedir/cancelar -->
+                <button *ngIf="p.name === currentUserName"
+                        class="btn-raise-hand-side"
+                        [class.has-order]="getQueuePosition(p.name) > 0"
+                        [style.backgroundColor]="getQueuePosition(p.name) > 0 ? getQueueColor(p.name) : null"
+                        (click)="toggleMyRequestToSpeak()"
+                        [title]="getQueuePosition(p.name) > 0 ? 'Cancelar mi pedido de palabra (Turno #' + getQueuePosition(p.name) + ')' : 'Pedir la palabra'">
+                  <span>{{ getQueuePosition(p.name) > 0 ? '🖐️ #' + getQueuePosition(p.name) : '🖐️ Pedir' }}</span>
+                </button>
+
+                <!-- Si es otro participante: el anfitrión o terceros ven la insignia no cliqueable con el orden de turno -->
+                <span *ngIf="p.name !== currentUserName && getQueuePosition(p.name) > 0"
+                      class="badge-raised-hand-indicator"
+                      [style.backgroundColor]="getQueueColor(p.name)"
+                      [title]="'Turno #' + getQueuePosition(p.name) + ' para hablar'">
+                  🖐️ #{{ getQueuePosition(p.name) }}
+                </span>
+              </ng-container>
+
+              <span class="part-mic-icon" [class.muted]="!p.isMic">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    *ngIf="p.isMic"
+                    d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"
+                  ></path>
+                  <line *ngIf="!p.isMic" x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+              </span>
+            </div>
+        </div>
+
+        <div class="sidebar-card-panel chat-panel" *ngIf="showChat">
+          <div class="panel-header">
+            <h3>Chat de la reunión</h3>
+            <button class="collapse-btn" (click)="toggleChat()">˅</button>
+          </div>
+
+          <div class="chat-messages-scroll">
+            <div
+              class="chat-message-item"
+              *ngFor="let msg of chatMessages"
+              [class.is-mine]="msg.isMe"
+            >
+              <div class="msg-author-header">
+                <span class="author-name">{{ msg.sender }}</span>
+                <span class="msg-timestamp">{{ msg.time }}</span>
+              </div>
+              <div class="msg-bubble">
+                <p>{{ msg.text }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-input-bar">
+            <input
+              type="text"
+              [(ngModel)]="newMessage"
+              placeholder="Escribe un mensaje..."
+              (keyup.enter)="sendMessage()"
+            />
+            <button
+              class="send-btn"
+              (click)="sendMessage()"
+              [disabled]="!newMessage.trim()"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>

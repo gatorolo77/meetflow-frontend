@@ -1,0 +1,270 @@
+<div class="login-wrapper">
+  <div class="login-card">
+    <div class="login-header">
+      <app-logo size="large" [showTagline]="true"></app-logo>
+    </div>
+
+    <div class="login-mode-tabs">
+      <button 
+        type="button"
+        class="tab-btn" 
+        [class.active]="loginMode === 'REGISTERED'" 
+        (click)="loginMode = 'REGISTERED'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span>Acceso Registrado</span>
+      </button>
+
+      <button 
+        type="button"
+        class="tab-btn" 
+        [class.active]="loginMode === 'GUEST'" 
+        (click)="loginMode = 'GUEST'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+        </svg>
+        <span>Unirse con Código</span>
+      </button>
+    </div>
+
+    <!-- MODO REGISTRADO -->
+    <div class="form-container" *ngIf="loginMode === 'REGISTERED'">
+      <div class="login-columns-grid">
+        <!-- Columna Izquierda: Información, Selección de Demo y Foto de Perfil -->
+        <div class="login-col-left">
+          <p class="mode-desc">Acceso exclusivo para anfitriones. Inicia sesión para administrar tus salas activas.</p>
+
+          <div class="demo-accounts-box">
+            <span class="demo-label">Usuarios Registrados (1-clic para probar):</span>
+            <div class="demo-users-list">
+              <button 
+                type="button"
+                class="demo-user-btn" 
+                *ngFor="let user of registeredUsers"
+                [class.active]="user.email === emailInput"
+                (click)="selectDemoUser(user.email)">
+                <img [src]="user.avatarUrl" [alt]="user.name">
+                <div class="demo-user-info">
+                  <span class="demo-name">{{ user.name }}</span>
+                  <span class="demo-role">{{ user.role }}</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <div class="avatar-uploader-group">
+            <label class="uploader-label">Foto de Perfil (Opcional o Genérica)</label>
+            <div class="avatar-picker-row">
+              <div class="avatar-preview-box">
+                <img [src]="hostAvatarPreview || ('https://ui-avatars.com/api/?name=' + (emailInput ? emailInput.split('@')[0] : 'Anfitrión') + '&background=0D5A56&color=ffffff&bold=true')" alt="Foto de perfil">
+              </div>
+              <div class="avatar-picker-actions">
+                <label class="btn-upload-avatar">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                    <circle cx="12" cy="13" r="4"></circle>
+                  </svg>
+                  <span>Subir foto</span>
+                  <input type="file" accept="image/*" (change)="onAvatarSelected($event, 'HOST')" class="hidden-file-input">
+                </label>
+                <button type="button" class="btn-remove-avatar" *ngIf="hostAvatarPreview" (click)="removeAvatar('HOST')">
+                  Usar genérica
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna Derecha: Inputs de Correo, Contraseña y Botón de Envío -->
+        <div class="login-col-right">
+          <form (submit)="onSubmitRegistered(); $event.preventDefault();" class="login-form">
+            <div class="form-group">
+              <label for="email">Correo electrónico registrado</label>
+              <input 
+                id="email" 
+                type="email" 
+                [(ngModel)]="emailInput" 
+                name="email"
+                placeholder="ejemplo@meetflow.com" 
+                required>
+            </div>
+
+            <div class="form-group">
+              <label for="password">Contraseña</label>
+              <input 
+                id="password" 
+                type="password" 
+                [(ngModel)]="passwordInput" 
+                name="password"
+                placeholder="••••••••" 
+                required>
+            </div>
+
+            <div class="error-alert" *ngIf="errorMessage">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <span>{{ errorMessage }}</span>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-submit">
+              <span>Ingresar a MeetFlow</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+
+            <div class="webmaster-access-row">
+              <a routerLink="/webmaster/login" class="webmaster-link">Acceso Administrador / Webmaster</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODO INVITADO -->
+    <div class="form-container" *ngIf="loginMode === 'GUEST'">
+      <div class="login-columns-grid">
+        <div class="login-col-left">
+          <p class="mode-desc">¿Has sido invitado a una reunión? Ingresa tus datos para acceder directamente a la sala sin pasar por el Dashboard.</p>
+
+          <div class="avatar-uploader-group">
+            <label class="uploader-label">Foto de Perfil (Opcional o Genérica)</label>
+            <div class="avatar-picker-row">
+              <div class="avatar-preview-box">
+                <img [src]="guestAvatarPreview || ('https://ui-avatars.com/api/?name=' + (guestNameInput || 'Invitado') + '&background=0284C7&color=ffffff&bold=true')" alt="Foto de perfil">
+              </div>
+              <div class="avatar-picker-actions">
+                <label class="btn-upload-avatar">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                    <circle cx="12" cy="13" r="4"></circle>
+                  </svg>
+                  <span>Subir foto</span>
+                  <input type="file" accept="image/*" (change)="onAvatarSelected($event, 'GUEST')" class="hidden-file-input">
+                </label>
+                <button type="button" class="btn-remove-avatar" *ngIf="guestAvatarPreview" (click)="removeAvatar('GUEST')">
+                  Usar genérica
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="login-col-right">
+          <form (submit)="onSubmitGuest(); $event.preventDefault();" class="login-form">
+            <div class="form-group">
+              <label for="guestName">Tu Nombre Completo</label>
+              <input 
+                id="guestName" 
+                type="text" 
+                [(ngModel)]="guestNameInput" 
+                name="guestName"
+                placeholder="Ej. Carlos Rodríguez" 
+                required>
+            </div>
+
+            <div class="form-group">
+              <label for="guestCode">Código o enlace de la reunión</label>
+              <input 
+                id="guestCode" 
+                type="text" 
+                [(ngModel)]="guestCodeInput" 
+                name="guestCode"
+                placeholder="Ej. m-101 o https://meetflow.app/meetings/m-101" 
+                required>
+            </div>
+
+            <div class="error-alert" *ngIf="guestErrorMessage">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <span>{{ guestErrorMessage }}</span>
+            </div>
+
+            <button type="submit" class="btn btn-leather btn-submit">
+              <span>Probar Hardware y Entrar a la Sala</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="login-footer">
+      <span>Plataforma segura de reuniones de video en tiempo real.</span>
+    </div>
+  </div>
+</div>
+
+<app-hardware-test-modal
+  *ngIf="showHardwareTest"
+  [meetingCode]="guestCodeInput"
+  [meetingTitle]="'Reunión de Videoconferencia'"
+  [guestName]="guestNameInput"
+  (confirmed)="onHardwareConfirmed($event)"
+  (canceled)="closeHardwareTest()">
+</app-hardware-test-modal>
+
+<div class="modal-overlay" *ngIf="showWaitingModal">
+  <div class="modal-card waiting-card">
+    <div class="waiting-header">
+      <div class="pulse-status-ring" [class.approved]="waitingRequestStatus === 'APPROVED'" [class.rejected]="waitingRequestStatus === 'REJECTED'">
+        <div class="inner-dot"></div>
+      </div>
+      <h3>
+        <span *ngIf="waitingRequestStatus === 'PENDING'">Esperando aprobación...</span>
+        <span *ngIf="waitingRequestStatus === 'APPROVED'">¡Solicitud aprobada! </span>
+        <span *ngIf="waitingRequestStatus === 'REJECTED'">Solicitud rechazada</span>
+      </h3>
+    </div>
+
+    <div class="waiting-body">
+      <div class="guest-info-badge">
+        <span class="label">Invitado:</span>
+        <span class="val">{{ guestNameInput }}</span>
+      </div>
+
+      <div class="guest-info-badge">
+        <span class="label">Sala de reunión:</span>
+        <span class="val">{{ targetMeetingCode }}</span>
+      </div>
+
+      <div class="status-msg-box pending" *ngIf="waitingRequestStatus === 'PENDING'">
+        <div class="spinner-sm"></div>
+        <p>Tu solicitud ha sido enviada al anfitrión. Aparecerás en la tarjeta <strong>"Solicitudes de ingreso"</strong> de su Dashboard para ser admitido.</p>
+      </div>
+
+      <div class="status-msg-box approved" *ngIf="waitingRequestStatus === 'APPROVED'">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0D5A56" stroke-width="2.5">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <p>¡El anfitrión aceptó tu ingreso! Entrando a la sala de video...</p>
+      </div>
+
+      <div class="status-msg-box rejected" *ngIf="waitingRequestStatus === 'REJECTED'">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+        <p>El anfitrión no aprobó la solicitud de ingreso a esta reunión.</p>
+      </div>
+    </div>
+
+    <div class="waiting-footer">
+      <button class="btn btn-secondary" (click)="cancelRequest()">
+        {{ waitingRequestStatus === 'REJECTED' ? 'Volver al Inicio' : 'Cancelar Solicitud' }}
+      </button>
+    </div>
+  </div>
+</div>
+

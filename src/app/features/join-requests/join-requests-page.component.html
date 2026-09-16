@@ -1,0 +1,48 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Solicitudes de Ingreso (Control de Admisión)</h1>
+      <p class="page-subtitle">Gestiona qué participantes tienen permiso para ingresar a tus salas activas.</p>
+    </div>
+  </div>
+
+  <div class="card requests-card">
+    <div class="requests-table" *ngIf="(joinRequests$ | async) as requests">
+      <div class="request-row" *ngFor="let req of requests">
+        <div class="user-avatar">
+          <img [src]="req.avatarUrl || ('https://ui-avatars.com/api/?name=' + req.userName + '&background=0F5A56&color=ffffff&bold=true')" [alt]="req.userName">
+        </div>
+        <div class="user-details">
+          <h3>{{ req.userName }}</h3>
+          <p>Solicitó ingresar a <strong>{{ req.targetMeetingTitle }}</strong></p>
+        </div>
+
+        <div class="status-col">
+          <span class="badge" [ngClass]="{
+            'badge-warning': req.status === 'PENDING',
+            'badge-success': req.status === 'APPROVED',
+            'badge-danger': req.status === 'REJECTED'
+          }">
+            {{ req.status === 'PENDING' ? 'En espera' : (req.status === 'APPROVED' ? 'Aprobado' : 'Rechazado') }}
+          </span>
+        </div>
+
+        <div class="actions-col">
+          <button class="btn btn-primary btn-sm" *ngIf="req.status === 'PENDING'" (click)="onApprove(req.id)">
+            Aprobar
+          </button>
+          <button class="btn btn-outline btn-sm" *ngIf="req.status === 'PENDING'" (click)="onReject(req.id)">
+            Rechazar
+          </button>
+          <button class="btn btn-secondary btn-sm" *ngIf="req.status === 'REJECTED'" (click)="onApprove(req.id)">
+            Admitir ahora
+          </button>
+        </div>
+      </div>
+
+      <div class="empty-state-box" *ngIf="requests.length === 0">
+        <p>No hay solicitudes de ingreso registradas.</p>
+      </div>
+    </div>
+  </div>
+</div>

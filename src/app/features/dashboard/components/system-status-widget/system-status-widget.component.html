@@ -1,0 +1,38 @@
+<section class="card status-card" *ngIf="(systemHealth$ | async) as health">
+  <h3 class="widget-title">Estado del sistema</h3>
+
+  <div class="overall-status">
+    <span class="live-status-dot"></span>
+    <span class="overall-text">Todos los servicios operativos</span>
+  </div>
+
+  <div class="services-list">
+    <div class="service-item" *ngFor="let srv of health.services">
+      <!-- Icon -->
+      <div class="service-icon">
+        <svg *ngIf="srv.icon === 'activity'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+        </svg>
+
+        <svg *ngIf="srv.icon === 'server'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+          <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+          <line x1="6" y1="6" x2="6.01" y2="6"></line>
+          <line x1="6" y1="18" x2="6.01" y2="18"></line>
+        </svg>
+
+        <svg *ngIf="srv.icon === 'radio'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="2"></circle>
+          <path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.83a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"></path>
+        </svg>
+
+        <svg *ngIf="srv.icon === 'message-square'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+      </div>
+
+      <span class="service-name">{{ srv.name }}</span>
+      <span class="service-tag tag-optimal">{{ srv.statusText }}</span>
+    </div>
+  </div>
+</section>

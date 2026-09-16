@@ -1,0 +1,34 @@
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: clip;
+  background-color: var(--bg-sand);
+}
+
+.app-main-wrapper {
+  flex: 1;
+  margin-left: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: clip;
+}
+
+.app-content {
+  flex: 1;
+  padding: 0 36px 48px 36px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+/* Mobile First Responsiveness */
+@media (max-width: 768px) {
+  .app-content {
+    padding: 0 12px 24px 12px;
+  }
+}

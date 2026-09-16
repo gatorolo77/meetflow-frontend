@@ -1,0 +1,224 @@
+<div class="bg-gray-50 text-gray-800 font-sans min-h-screen">
+
+    <!-- HEADER / NAVEGACIÓN -->
+    <header class="bg-[#FFE600] border-b border-[#E6CF00] shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
+            
+            <!-- Logo o Marca -->
+            <a routerLink="/landing" class="flex items-center gap-3 group">
+                <img src="assets/logi.png" alt="MercadoLibro Logo" class="h-12 w-auto object-contain transition duration-200 group-hover:scale-105">
+                <span class="font-bold tracking-tight text-[#2A3375] flex flex-col text-[1.2rem] leading-none lowercase" style="font-family: 'Proxima Nova', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                    <span>mercado</span>
+                    <span>libro</span>
+                </span>
+            </a>
+
+          
+            <div class="w-full md:max-w-xl relative flex items-center">
+                <span class="absolute left-3 text-gray-500">
+                    <i data-lucide="search" class="w-5 h-5"></i>
+                </span>
+                <input type="text" placeholder="Buscar título, autor, género o ISBN..." 
+                    class="w-full pl-10 pr-24 py-2 bg-white border border-yellow-300 rounded-lg focus:bg-white focus:border-[#2A3375] focus:outline-none transition text-sm shadow-sm">
+                
+                <div class="absolute right-2 flex items-center gap-2">
+                    <button class="p-1.5 text-[#2A3375] hover:text-blue-900 relative">
+                        <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+                        <span class="absolute -top-1 -right-1 bg-[#2A3375] text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">3</span>
+                    </button>
+                    <button class="p-1.5 text-[#2A3375] hover:text-blue-900 relative">
+                        <i data-lucide="bell" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            
+            <div class="flex items-center text-xs text-[#2A3375]/90 cursor-pointer hover:text-[#2A3375] font-medium">
+                <i data-lucide="map-pin" class="w-4 h-4 mr-1 text-[#2A3375]"></i>
+                <span>Enviar a <strong class="text-[#2A3375]">Rosario</strong></span>
+            </div>
+        </div>
+
+        <div class="border-t border-[#E6CF00]/70 bg-[#FFE600]">
+            <div class="max-w-7xl mx-auto px-4 flex items-center gap-6 overflow-x-auto py-2 text-sm whitespace-nowrap">
+                <a href="#" class="font-semibold text-[#2A3375] flex items-center gap-1">
+                    <i data-lucide="menu" class="w-4 h-4"></i> Todos
+                </a>
+                <a href="#" class="text-[#2A3375]/80 hover:text-[#2A3375] font-medium transition">Papel</a>
+                <a href="#" class="text-[#2A3375]/80 hover:text-[#2A3375] font-medium transition">E-books</a>
+                <a href="#" class="text-[#2A3375]/80 hover:text-[#2A3375] font-medium transition">Audiolibros</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 space-y-10">
+
+
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-amber-900 text-amber-50 p-6 rounded-2xl flex flex-col justify-between shadow-md relative overflow-hidden group">
+                <div class="z-10">
+                    <span class="bg-amber-700 text-xs px-2 py-1 rounded font-medium">Promo 1</span>
+                    <h3 class="text-xl font-serif font-bold mt-2">Clásicos Universales</h3>
+                    <p class="text-xs text-amber-200 mt-1">Hasta 35% de descuento en ediciones de lujo.</p>
+                </div>
+                <button routerLink="/libro/1" class="mt-4 bg-white text-amber-900 text-xs font-semibold py-2 px-4 rounded-lg w-fit hover:bg-amber-100 transition shadow">Ver catálogo</button>
+            </div>
+            <div class="bg-emerald-900 text-emerald-50 p-6 rounded-2xl flex flex-col justify-between shadow-md relative overflow-hidden group">
+                <div class="z-10">
+                    <span class="bg-emerald-700 text-xs px-2 py-1 rounded font-medium">Promo 2</span>
+                    <h3 class="text-xl font-serif font-bold mt-2">Novedades Juveniles</h3>
+                    <p class="text-xs text-emerald-200 mt-1">Llevá 2 libros con envío gratis.</p>
+                </div>
+                <button routerLink="/libro/1" class="mt-4 bg-white text-emerald-900 text-xs font-semibold py-2 px-4 rounded-lg w-fit hover:bg-emerald-100 transition shadow">Explorar</button>
+            </div>
+            <div class="bg-indigo-900 text-indigo-50 p-6 rounded-2xl flex flex-col justify-between shadow-md relative overflow-hidden group">
+                <div class="z-10">
+                    <span class="bg-indigo-700 text-xs px-2 py-1 rounded font-medium">Promo 3</span>
+                    <h3 class="text-xl font-serif font-bold mt-2">E-books del Mes</h3>
+                    <p class="text-xs text-indigo-200 mt-1">Títulos seleccionados desde $1.999.</p>
+                </div>
+                <button routerLink="/libro/1" class="mt-4 bg-white text-indigo-900 text-xs font-semibold py-2 px-4 rounded-lg w-fit hover:bg-indigo-100 transition shadow">Comprar digital</button>
+            </div>
+        </section>
+
+       
+        <section>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-serif font-bold text-gray-900">Continuar Leyendo / Sugerencias</h2>
+                <a routerLink="/libro/1" class="text-xs font-semibold text-amber-700 hover:underline">Ver todo</a>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                <!-- Libro 1 -->
+                <div routerLink="/libro/1" class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition flex flex-col justify-between cursor-pointer group">
+                    <div class="bg-gray-100 h-44 rounded-lg mb-3 overflow-hidden flex items-center justify-center">
+                        <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=400&q=80" alt="El Aleph" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-semibold truncate group-hover:text-amber-700 transition">El Aleph</h4>
+                        <p class="text-xs text-gray-500">Jorge Luis Borges</p>
+                    </div>
+                </div>
+                <!-- Libro 2 -->
+                <div routerLink="/libro/1" class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition flex flex-col justify-between cursor-pointer group">
+                    <div class="bg-gray-100 h-44 rounded-lg mb-3 overflow-hidden flex items-center justify-center">
+                        <img src="https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=400&q=80" alt="Ficciones" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-semibold truncate group-hover:text-amber-700 transition">Ficciones</h4>
+                        <p class="text-xs text-gray-500">Jorge Luis Borges</p>
+                    </div>
+                </div>
+                <!-- Libro 3 -->
+                <div routerLink="/libro/1" class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition flex flex-col justify-between cursor-pointer group">
+                    <div class="bg-gray-100 h-44 rounded-lg mb-3 overflow-hidden flex items-center justify-center">
+                        <img src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=400&q=80" alt="Rayuela" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-semibold truncate group-hover:text-amber-700 transition">Rayuela</h4>
+                        <p class="text-xs text-gray-500">Julio Cortázar</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-serif font-bold text-gray-900">Los Más Vendidos</h2>
+                <a routerLink="/libro/1" class="text-xs font-semibold text-amber-700 hover:underline">Ver ranking</a>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                <div routerLink="/libro/1" class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition cursor-pointer group">
+                    <div class="bg-gray-100 h-44 rounded-lg mb-3 overflow-hidden flex items-center justify-center">
+                        <img src="https://images.unsplash.com/photo-1541963463532-d68292c34b19?auto=format&fit=crop&w=400&q=80" alt="Cien años de soledad" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                    </div>
+                    <h4 class="text-sm font-semibold truncate group-hover:text-amber-700 transition">Cien años de soledad</h4>
+                    <p class="text-xs text-gray-500">Gabriel García Márquez</p>
+                    <p class="text-sm font-bold text-amber-800 mt-2">$24.500</p>
+                </div>
+                <div routerLink="/libro/1" class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition cursor-pointer group">
+                    <div class="bg-gray-100 h-44 rounded-lg mb-3 overflow-hidden flex items-center justify-center">
+                        <img src="https://images.unsplash.com/photo-1495446815901-a7297e633e8d?auto=format&fit=crop&w=400&q=80" alt="Sapiens" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                    </div>
+                    <h4 class="text-sm font-semibold truncate group-hover:text-amber-700 transition">Sapiens</h4>
+                    <p class="text-xs text-gray-500">Yuval Noah Harari</p>
+                    <p class="text-sm font-bold text-amber-800 mt-2">$28.900</p>
+                </div>
+                <div routerLink="/libro/1" class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition cursor-pointer group">
+                    <div class="bg-gray-100 h-44 rounded-lg mb-3 overflow-hidden flex items-center justify-center">
+                        <img src="https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=400&q=80" alt="Hábitos Atómicos" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                    </div>
+                    <h4 class="text-sm font-semibold truncate group-hover:text-amber-700 transition">Hábitos Atómicos</h4>
+                    <p class="text-xs text-gray-500">James Clear</p>
+                    <p class="text-sm font-bold text-amber-800 mt-2">$21.200</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-serif font-bold text-gray-900">Joyas Usadas</h2>
+                <span class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-medium">Ejemplares únicos</span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                <div routerLink="/libro/1" class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition cursor-pointer group">
+                    <div class="bg-gray-100 h-44 rounded-lg mb-3 overflow-hidden flex items-center justify-center">
+                        <img src="https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=400&q=80" alt="La Tregua" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                    </div>
+                    <h4 class="text-sm font-semibold truncate group-hover:text-amber-700 transition">La Tregua (1982)</h4>
+                    <p class="text-xs text-gray-500">Mario Benedetti</p>
+                    <p class="text-xs text-emerald-600 mt-1">Usado - Como nuevo</p>
+                    <p class="text-sm font-bold text-amber-800 mt-1">$9.500</p>
+                </div>
+                <div routerLink="/libro/1" class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition cursor-pointer group">
+                    <div class="bg-gray-100 h-44 rounded-lg mb-3 overflow-hidden flex items-center justify-center">
+                        <img src="https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=400&q=80" alt="Sobre héroes y tumbas" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                    </div>
+                    <h4 class="text-sm font-semibold truncate group-hover:text-amber-700 transition">Sobre héroes y tumbas</h4>
+                    <p class="text-xs text-gray-500">Ernesto Sabato</p>
+                    <p class="text-xs text-emerald-600 mt-1">Usado - Muy bueno</p>
+                    <p class="text-sm font-bold text-amber-800 mt-1">$12.000</p>
+                </div>
+                <div routerLink="/libro/1" class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition cursor-pointer group">
+                    <div class="bg-gray-100 h-44 rounded-lg mb-3 overflow-hidden flex items-center justify-center">
+                        <img src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=400&q=80" alt="Poemas de amor" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                    </div>
+                    <h4 class="text-sm font-semibold truncate group-hover:text-amber-700 transition">Poemas de amor</h4>
+                    <p class="text-xs text-gray-500">Alfonsina Storni</p>
+                    <p class="text-xs text-emerald-600 mt-1">Usado - Excelente</p>
+                    <p class="text-sm font-bold text-amber-800 mt-1">$8.000</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-12">
+            <h2 class="text-lg font-serif font-bold text-gray-900 mb-4">Comunidades Locales & Libreros Amigos</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="bg-white p-4 rounded-xl border border-gray-200 flex items-center gap-4 hover:border-amber-300 transition">
+                    <div class="w-12 h-12 bg-amber-200 rounded-full flex items-center justify-center font-bold text-amber-900 shadow-sm">V1</div>
+                    <div>
+                        <h4 class="text-sm font-semibold">Vendedor 1 - Librería Anticuaria</h4>
+                        <p class="text-xs text-gray-500">Especialistas en literatura latinoamericana y primeras ediciones.</p>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-gray-200 flex items-center gap-4 hover:border-emerald-300 transition">
+                    <div class="w-12 h-12 bg-emerald-200 rounded-full flex items-center justify-center font-bold text-emerald-900 shadow-sm">V2</div>
+                    <div>
+                        <h4 class="text-sm font-semibold">Vendedor 2 - Libros delCentro</h4>
+                        <p class="text-xs text-gray-500">Curaduría de filosofía, ensayo y narrativa contemporánea.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <div class="fixed bottom-6 right-6 z-50 group">
+        <a routerLink="/dashboard" class="relative flex items-center justify-center cursor-pointer transition transform hover:scale-110 active:scale-95 block drop-shadow-xl" title="Ir a MeetFlow">
+            <img src="assets/chatroom.png" alt="Ir a MeetFlow" class="w-24 h-24 md:w-32 md:h-32 aspect-square object-contain rounded-full border-4 border-amber-500 bg-white p-1.5 md:p-2 shadow-2xl ring-4 ring-amber-200/60 transition duration-300 group-hover:border-amber-600">
+            <span class="absolute -top-9 right-0 bg-gray-900 text-white text-[11px] font-semibold px-3 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition duration-200 whitespace-nowrap shadow-lg pointer-events-none">
+                Ir a MeetFlow 💬
+            </span>
+        </a>
+    </div>
+
+</div>

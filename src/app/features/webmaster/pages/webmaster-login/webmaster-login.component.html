@@ -1,0 +1,116 @@
+<div class="webmaster-bg">
+  <div class="webmaster-card">
+    <div class="logo-block">
+      <app-logo size="medium"></app-logo>
+      <span class="admin-badge">{{ invitedEmail ? 'Registro Anfitrión' : 'Portal Webmaster' }}</span>
+    </div>
+
+    <!-- Candidate Registration Mode (When opened via invitation link in email) -->
+    <ng-container *ngIf="invitedEmail; else webmasterLoginTpl">
+      <h2 class="title">Solicitud de Registro de Anfitrión</h2>
+      <p class="subtitle">
+        Completa tu nombre completo para enviar tu postulación de Anfitrión al Webmaster.
+      </p>
+
+      <div class="email-link-banner">
+        <div class="banner-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
+        </div>
+        <div class="banner-text">
+          <span>Invitación recibida para: <strong>{{ invitedEmail }}</strong></span>
+        </div>
+      </div>
+
+      <!-- Success Card after submitting host application -->
+      <div class="success-card" *ngIf="applicationSubmitted">
+        <div class="success-icon">🎉</div>
+        <h3>¡Solicitud Enviada al Webmaster!</h3>
+        <p>Tu postulación como Anfitrión fue registrada exitosamente. El Webmaster ha recibido la notificación y revisará tu solicitud.</p>
+        <button class="btn-submit" (click)="goToUserLogin()">Volver a Inicio de Sesión</button>
+      </div>
+
+      <!-- Application Form -->
+      <form *ngIf="!applicationSubmitted" (submit)="onSubmitHostApplication(); $event.preventDefault()" class="form">
+        <div class="error-toast" *ngIf="errorMessage">
+          <span>{{ errorMessage }}</span>
+        </div>
+
+        <div class="form-group">
+          <label>Nombre y Apellido del Anfitrión</label>
+          <input
+            type="text"
+            [(ngModel)]="hostName"
+            name="hostName"
+            placeholder="Ejemplo: Carlos Rodríguez"
+            required
+            autofocus
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Correo Electrónico (Pre-validado por invitación)</label>
+          <input
+            type="email"
+            [value]="invitedEmail"
+            name="invitedEmail"
+            disabled
+          />
+        </div>
+
+        <button type="submit" class="btn-submit" [disabled]="isLoading">
+          <span *ngIf="!isLoading">🚀 Enviar Solicitud al Webmaster</span>
+          <span *ngIf="isLoading">Enviando postulación...</span>
+        </button>
+      </form>
+    </ng-container>
+
+    <!-- Standard Webmaster Login Form -->
+    <ng-template #webmasterLoginTpl>
+      <h2 class="title">Acceso de Administrador</h2>
+      <p class="subtitle">
+        Plataforma de validación y aprobación de nuevos Anfitriones MeetFlow.
+      </p>
+
+      <form (submit)="onSubmit(); $event.preventDefault()" class="form">
+        <div class="error-toast" *ngIf="errorMessage">
+          <span>{{ errorMessage }}</span>
+        </div>
+
+        <div class="form-group">
+          <label>Correo Electrónico Webmaster</label>
+          <input
+            type="email"
+            [(ngModel)]="email"
+            name="email"
+            placeholder="webmaster@meetflow.com"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Contraseña Administrador</label>
+          <input
+            type="password"
+            [(ngModel)]="password"
+            name="password"
+            placeholder="••••••••••••"
+            required
+          />
+        </div>
+
+        <button type="submit" class="btn-submit" [disabled]="isLoading">
+          <span *ngIf="!isLoading">Ingresar al Panel Webmaster</span>
+          <span *ngIf="isLoading">Verificando credenciales...</span>
+        </button>
+      </form>
+    </ng-template>
+
+    <div class="footer-links">
+      <a routerLink="/login" (click)="goToUserLogin($event)" class="back-link">← Volver al Login de Usuarios</a>
+    </div>
+  </div>
+</div>
+
