@@ -147,6 +147,78 @@
   gap: 8px;
 }
 
+.title-with-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.badge-ended {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  background-color: #F3F4F6;
+  color: #4B5563;
+  border: 1px solid #D1D5DB;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.badge-live-pulse {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background-color: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.meta-sub-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.meta-divider {
+  font-size: 0.75rem;
+  color: #9CA3AF;
+}
+
+.integrantes-count-badge {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.meeting-ended-row {
+  opacity: 0.88;
+  background-color: #FAFAFA;
+}
+
+.icon-ended {
+  filter: grayscale(0.2);
+  opacity: 0.85;
+}
+
+.ended-text-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #6B7280;
+  background-color: #E5E7EB;
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.02em;
+}
+
 .btn-join {
   padding: 6px 14px;
   font-size: 0.82rem;

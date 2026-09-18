@@ -165,6 +165,7 @@
                 d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
               ></path>
             </svg>
+            <span class="header-waiting-badge" *ngIf="unreadChatCount > 0">{{ unreadChatCount }}</span>
           </button>
 
           <button
@@ -226,6 +227,7 @@
           <div class="spotlight-main-card">
             <video
               *ngIf="getParticipantStream(spotlightParticipant || hostParticipant)"
+              [appSrcObject]="getParticipantStream(spotlightParticipant || hostParticipant)"
               [srcObject]="getParticipantStream(spotlightParticipant || hostParticipant)"
               autoplay
               muted
@@ -266,6 +268,7 @@
             <div class="pip-card-badge-host">👑 Anfitrión</div>
             <video
               *ngIf="getParticipantStream(hostParticipant)"
+              [appSrcObject]="getParticipantStream(hostParticipant)"
               [srcObject]="getParticipantStream(hostParticipant)"
               autoplay
               muted
@@ -302,6 +305,7 @@
                    [title]="isHost ? (getQueuePosition(guest.name) > 0 ? 'Turno #' + getQueuePosition(guest.name) + ' - Click para otorgar la palabra' : 'Click para otorgar la palabra a ' + guest.name) : guest.name">
                 <video
                   *ngIf="getParticipantStream(guest)"
+                  [appSrcObject]="getParticipantStream(guest)"
                   [srcObject]="getParticipantStream(guest)"
                   autoplay
                   muted
@@ -381,9 +385,10 @@
             </button>
 
             <button
-              class="pill-control-btn"
+              class="pill-control-btn btn-screen-share-mobile-hide"
               [class.active-teal]="isSharingScreen"
               (click)="toggleScreenShare()"
+              title="Compartir pantalla"
             >
               <svg
                 width="18"
@@ -436,6 +441,7 @@
                   d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
                 ></path>
               </svg>
+              <span class="chat-unread-badge" *ngIf="unreadChatCount > 0">{{ unreadChatCount }}</span>
             </button>
 
             <button

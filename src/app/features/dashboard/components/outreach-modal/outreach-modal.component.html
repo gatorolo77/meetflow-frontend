@@ -177,13 +177,21 @@
 
       <div class="summary-box">
         <div class="summary-item">
-          <span class="label">Total de correos procesados:</span>
+          <span class="label">Total de correos en CSV:</span>
           <span class="val">{{ successResponse.totalContactos }}</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Correos enviados por SMTP:</span>
+          <span class="val">{{ successResponse.correosEnviados.length }}</span>
         </div>
         <div class="summary-item">
           <span class="label">Código de acceso:</span>
           <span class="val code-val">{{ successResponse.meetingCode }}</span>
         </div>
+      </div>
+
+      <div class="error-alert" *ngIf="successResponse.correosFallidos && successResponse.correosFallidos.length > 0">
+        <strong>⚠️ Advertencia SMTP:</strong> Se procesó la lista de la reunión, pero los correos a <em>{{ successResponse.correosFallidos.join(', ') }}</em> no pudieron despacharse a sus buzones debido a un error de autenticación con Gmail (<code>Authentication failed</code>). Verifica tu contraseña de aplicación en <code>application.yml</code>.
       </div>
 
       <div class="modal-footer">

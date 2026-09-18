@@ -21,4 +21,18 @@ export class UpcomingMeetingsComponent {
   onDeleteMeeting(meetingId: string): void {
     this.delete.emit(meetingId);
   }
+
+  getParticipantCount(meeting: Meeting): number {
+    if (meeting.finalParticipantCount !== undefined && meeting.finalParticipantCount !== null) {
+      return meeting.finalParticipantCount;
+    }
+    return meeting.participants ? meeting.participants.length : 0;
+  }
+
+  getMeetingDuration(meeting: Meeting): string {
+    if (meeting.endedDurationText) {
+      return meeting.endedDurationText;
+    }
+    return `${meeting.durationMinutes} min`;
+  }
 }

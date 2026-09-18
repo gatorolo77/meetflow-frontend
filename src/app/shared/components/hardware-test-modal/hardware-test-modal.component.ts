@@ -1,5 +1,6 @@
-import { Component, EventEmitter, Input, OnInit, OnDestroy, Output, ElementRef, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, OnDestroy, Output, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { AuthService } from '../../../core/services/auth.service';
+import { WebRtcService } from '../../../core/services/webrtc.service';
 
 @Component({
   selector: 'app-hardware-test-modal',
@@ -33,7 +34,13 @@ export class HardwareTestModalComponent implements OnInit, OnDestroy {
   private audioContext: AudioContext | null = null;
   private animFrameId: number | null = null;
 
-  constructor(private authService: AuthService) {}
+  isUnsecureContext = typeof window !== 'undefined' && !window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+
+  constructor(
+    private authService: AuthService,
+    private webrtcService: WebRtcService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   async ngOnInit(): Promise<void> {
     const user = this.authService.getCurrentUser();
@@ -44,7 +51,6 @@ export class HardwareTestModalComponent implements OnInit, OnDestroy {
     }
 
     this.updateUserAvatar();
-    await this.loadDevices();
     await this.startHardwareTest();
   }
 
@@ -66,10 +72,10 @@ export class HardwareTestModalComponent implements OnInit, OnDestroy {
   async loadDevices(): Promise<void> {
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
-      this.availableCams = devices.filter(d => d.kind === 'videoinput');
-      this.availableMics = devices.filter(d => d.kind === 'audioinput');
-      if (this.availableCams.length > 0) this.selectedCamId = this.availableCams[0].deviceId;
-      if (this.availableMics.length > 0) this.selectedMicId = this.availableMics[0].deviceId;
+      this.availableCams = devices.filter(d => d.kind === 'videoinput' && d.deviceId);
+      this.availableMics = devices.filter(d => d.kind === 'audioinput' && d.deviceId);
+      if (this.availableCams.length > 0 && !this.selectedCamId) this.selectedCamId = this.availableCams[0].deviceId;
+      if (this.availableMics.length > 0 && !this.selectedMicId) this.selectedMicId = this.availableMics[0].deviceId;
     } catch (e) {
       console.warn('Enumerate devices failed', e);
     }
@@ -77,21 +83,70 @@ export class HardwareTestModalComponent implements OnInit, OnDestroy {
 
   async startHardwareTest(): Promise<void> {
     this.stopHardwareTest();
-    try {
-      this.stream = await navigator.mediaDevices.getUserMedia({
-        video: this.isCamActive ? (this.selectedCamId ? { deviceId: this.selectedCamId } : true) : false,
-        audio: this.isMicActive ? (this.selectedMicId ? { deviceId: this.selectedMicId } : true) : false
-      });
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      console.warn('getUserMedia no disponible en este entorno.');
+      return;
+    }
 
-      if (this.videoPreview && this.stream && this.isCamActive) {
-        this.videoPreview.nativeElement.srcObject = this.stream;
+    const videoConstraint: any = this.isCamActive 
+      ? (this.selectedCamId ? { deviceId: { exact: this.selectedCamId } } : { facingMode: 'user' }) 
+      : false;
+
+    const audioConstraint: any = this.isMicActive 
+      ? (this.selectedMicId ? { deviceId: { exact: this.selectedMicId } } : true) 
+      : false;
+
+    try {
+      // 1. Intentar obtención primaria
+      this.stream = await navigator.mediaDevices.getUserMedia({
+        video: videoConstraint,
+        audio: audioConstraint
+      });
+    } catch (err) {
+      console.warn('Intento específico de test de hardware falló, probando restricciones generales:', err);
+      try {
+        // 2. Fallback genérico
+        this.stream = await navigator.mediaDevices.getUserMedia({
+          video: this.isCamActive,
+          audio: this.isMicActive
+        });
+      } catch (err2) {
+        console.warn('Falló obtención genérica de medios:', err2);
+        try {
+          // 3. Fallback solo audio si el video está bloqueado
+          if (this.isMicActive) {
+            this.stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+          }
+        } catch (err3) {
+          try {
+            // 4. Fallback solo video si el audio está bloqueado
+            if (this.isCamActive) {
+              this.stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+            }
+          } catch (err4) {
+            console.error('No se pudo iniciar el test de hardware:', err4);
+            return;
+          }
+        }
       }
+    }
+
+    if (this.stream) {
+      // Cargar etiquetas reales de dispositivos una vez otorgados los permisos
+      await this.loadDevices();
+      this.cdr.detectChanges();
+
+      setTimeout(() => {
+        if (this.videoPreview && this.videoPreview.nativeElement && this.stream) {
+          this.videoPreview.nativeElement.srcObject = this.stream;
+          this.videoPreview.nativeElement.muted = true;
+          this.videoPreview.nativeElement.play().catch(e => console.warn('Video play error:', e));
+        }
+      }, 50);
 
       if (this.isMicActive && this.stream.getAudioTracks().length > 0) {
         this.setupAudioMeter(this.stream);
       }
-    } catch (err) {
-      console.warn('Could not access camera/mic for test', err);
     }
   }
 
@@ -156,7 +211,13 @@ export class HardwareTestModalComponent implements OnInit, OnDestroy {
       return;
     }
     const finalName = this.userNameInput.trim();
-    this.stopHardwareTest();
+    if (this.stream) {
+      this.webrtcService.setLocalStream(this.stream);
+    }
+    if (this.audioContext) {
+      this.audioContext.close();
+      this.audioContext = null;
+    }
     this.confirmed.emit({ 
       micEnabled: this.isMicActive, 
       camEnabled: this.isCamActive,

@@ -13,6 +13,7 @@ export interface OutreachResponse {
   meetingTitle: string;
   totalContactos: number;
   correosEnviados: string[];
+  correosFallidos?: string[];
 }
 
 @Injectable({
@@ -40,6 +41,7 @@ export class OutreachService {
     formData.append('meetingCode', meetingCode || ('m-' + Date.now()));
     formData.append('nombreCampana', nombreCampana || 'Campaña Invitados');
     formData.append('scheduledTime', timeVal);
+    formData.append('baseUrl', window.location.origin);
 
     return this.http.post<OutreachResponse>(`${this.apiUrl}/upload`, formData).pipe(
       tap(res => {

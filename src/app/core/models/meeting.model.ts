@@ -26,6 +26,10 @@ export interface Meeting {
   isLive: boolean;
   participants: Participant[];
   maxParticipants?: number;
+  isEnded?: boolean;
+  endedDurationText?: string;
+  finalParticipantCount?: number;
+  endedAtTime?: string;
 }
 
 export interface LiveMeetingMetrics {

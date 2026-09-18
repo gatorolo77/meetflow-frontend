@@ -15,7 +15,9 @@ import { Subscription } from 'rxjs';
 export class MeetingRoomComponent implements OnInit, OnDestroy {
   meetingId = '8f3a7c2d-9b11-4e55-9c22-33f4d5e6a77b';
   meetingTitle = 'Sprint semanal';
-  timerText = '00:14:32';
+  timerText = '00:00:00';
+  private timerInterval: any;
+  private meetingStartTime = 0;
 
   isMicMuted = false;
   isCameraOff = false;
@@ -33,17 +35,12 @@ export class MeetingRoomComponent implements OnInit, OnDestroy {
   pendingRequestsForRoom: JoinRequest[] = [];
   private subs: Subscription[] = [];
 
-  chatMessages = [
-    { sender: 'Ana García', time: '10:12', text: '¡Hola a todos! ¿Listos para comenzar?', isMe: false },
-    { sender: 'Rodrigo Pérez', time: '10:13', text: 'Sí, yo estoy listo.', isMe: false },
-    { sender: 'Martín López', time: '10:14', text: 'Perfecto, ya comparto la pantalla.', isMe: false },
-    { sender: 'Sergio D.', time: '10:15', text: 'Genial. ¿Alguien tiene algún punto para sumar a la reunión?', isMe: true }
-  ];
+  chatMessages: { sender: string; time: string; text: string; isMe: boolean }[] = [];
   newMessage = '';
+  unreadChatCount = 0;
 
-  participantsList: any[] = [
-    { name: 'Sergio D.', role: 'Anfitrión', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80', isMic: true, isCam: true }
-  ];
+  participantsList: any[] = [];
+  private latestApprovedRequests: JoinRequest[] = [];
 
   showMeetingEndedModal = false;
   isHostEnding = false;
@@ -62,10 +59,28 @@ export class MeetingRoomComponent implements OnInit, OnDestroy {
     const routeId = this.route.snapshot.paramMap.get('id');
     if (routeId) {
       this.meetingId = routeId;
+      this.meetingService.getUpcomingMeetings().subscribe(meetings => {
+        const found = meetings.find(m => m.code === routeId || m.id === routeId);
+        if (found) {
+          this.meetingTitle = found.title;
+        } else {
+          this.meetingTitle = `Reunión (${routeId})`;
+        }
+      });
     }
 
-    // Resolver avatar y datos reales del Anfitrión desde AuthService
-    this.syncHostProfile();
+    const qParams = this.route.snapshot.queryParams;
+    const modeParam = qParams['mode'];
+    const guestNameParam = qParams['guestName'] || qParams['name'];
+
+    const currentUser = this.authService.getCurrentUser();
+    if (!currentUser || modeParam === 'GUEST') {
+      const nameToUse = guestNameParam || 'Invitado Cloudflare';
+      this.authService.loginAsGuest(nameToUse).subscribe();
+    }
+
+    // Inicializar lista unificada de participantes sin avatares hardcodeados
+    this.reconcileParticipantsList();
     
     // Asignar al anfitrión en primer plano en Spotlight por defecto
     this.spotlightParticipant = this.hostParticipant;
@@ -84,30 +99,7 @@ export class MeetingRoomComponent implements OnInit, OnDestroy {
       this.webrtcService.remoteStreams$.subscribe(remotes => this.remoteStreams = remotes),
       this.authService.currentUser$.subscribe(user => {
         if (user) {
-          const isUserHost = user.role === 'Anfitrión';
-          if (isUserHost) {
-            const host = this.participantsList.find(p => p.role === 'Anfitrión');
-            if (host) {
-              if (user.name) host.name = user.name;
-              if (user.avatarUrl) host.avatar = user.avatarUrl;
-            }
-          } else {
-            // Current user is a GUEST: ensure Host keeps their real profile picture
-            this.syncHostProfile();
-
-            const guestName = user.name || 'Invitado';
-            let guestPart = this.participantsList.find(p => p.name === guestName);
-            if (!guestPart) {
-              this.participantsList.push({
-                name: guestName,
-                role: 'Invitado',
-                avatar: user.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(guestName)}&background=0284C7&color=ffffff&bold=true`,
-                isMic: false,
-                isCam: true
-              });
-            }
-          }
-
+          this.reconcileParticipantsList();
           this.chatMessages.forEach(msg => {
             if (msg.isMe && user.name) {
               msg.sender = user.name;
@@ -123,36 +115,63 @@ export class MeetingRoomComponent implements OnInit, OnDestroy {
         );
       }),
       this.joinRequestService.getApprovedRequests().subscribe(approvedList => {
-        const roomApproved = approvedList.filter(r => 
-          r.targetMeetingId === this.meetingId || 
-          r.targetMeetingId.includes(this.meetingId) || 
-          this.meetingId.includes(r.targetMeetingId)
-        );
-
-        roomApproved.forEach(req => {
-          const existing = this.participantsList.find(p => p.name.trim().toLowerCase() === req.userName.trim().toLowerCase());
-          if (!existing) {
-            this.participantsList.push({
-              name: req.userName,
-              role: 'Invitado',
-              avatar: req.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(req.userName)}&background=0284C7&color=ffffff&bold=true`,
-              isMic: false,
-              isCam: true
-            });
-          }
-        });
-        this.updateMicrophoneStates();
+        this.latestApprovedRequests = approvedList || [];
+        this.reconcileParticipantsList();
       }),
       this.webrtcService.meetingEnded$.subscribe(code => {
         if (code === this.meetingId || this.meetingId.includes(code)) {
           this.handleRoomEndedNotification();
         }
+      }),
+      this.webrtcService.spotlightChanged$.subscribe(name => {
+        if (name) {
+          const found = this.participantsList.find(p => p.name.trim().toLowerCase() === name.trim().toLowerCase());
+          if (found) {
+            this.spotlightParticipant = found;
+            this.updateMicrophoneStates();
+          }
+        }
+      }),
+      this.webrtcService.speakQueueChanged$.subscribe(data => {
+        if (data && (data.roomCode === this.meetingId || data.roomCode.includes(this.meetingId) || this.meetingId.includes(data.roomCode))) {
+          this.speakQueue = data.speakQueue || [];
+          try {
+            localStorage.setItem('meetflow_speak_queue_' + this.meetingId, JSON.stringify(this.speakQueue));
+          } catch (e) {}
+        }
+      }),
+      this.webrtcService.guestLeft$.subscribe(data => {
+        if (data && (data.roomCode === this.meetingId || data.roomCode.includes(this.meetingId) || this.meetingId.includes(data.roomCode))) {
+          if (data.guestName) {
+            this.removeParticipantByName(data.guestName);
+          }
+        }
+      }),
+      this.webrtcService.chatMessage$.subscribe(data => {
+        if (data && (data.roomCode === this.meetingId || data.roomCode.includes(this.meetingId) || this.meetingId.includes(data.roomCode))) {
+          const currentName = this.currentUserName.trim().toLowerCase();
+          const isMine = data.sender.trim().toLowerCase() === currentName;
+          if (!isMine) {
+            this.chatMessages.push({
+              sender: data.sender,
+              time: data.time,
+              text: data.text,
+              isMe: false
+            });
+            this.saveChatMessages();
+            this.scrollChatToBottom();
+            if (!this.showChat) {
+              this.unreadChatCount++;
+            }
+          }
+        }
       })
     );
 
-    // Cargar cola de turnos y foco al iniciar
+    // Cargar cola de turnos, foco y mensajes de chat al iniciar
     this.loadSpeakQueue();
     this.loadSpotlight();
+    this.loadChatMessages();
 
     // Listen to native window storage events from other tabs
     window.addEventListener('storage', (event) => {
@@ -166,23 +185,55 @@ export class MeetingRoomComponent implements OnInit, OnDestroy {
         this.loadSpotlight();
       }
       if (event.key === 'meetflow_host_profile' || event.key === 'meetflow_auth_user') {
-        this.syncHostProfile();
+        this.reconcileParticipantsList();
       }
       if (event.key === 'meetflow_guest_left_' + this.meetingId) {
         this.handleGuestLeftNotification();
       }
+      if (event.key === 'meetflow_chat_messages_' + this.meetingId) {
+        this.loadChatMessages();
+      }
     });
+
+    // Iniciar temporizador dinámico en vivo de la reunión
+    this.startMeetingTimer();
 
     // Fallback periodic check for cross-tab host ending, speakQueue, spotlight, host avatar & guest departure updates
     this.endCheckInterval = setInterval(() => {
       if (localStorage.getItem('meetflow_meeting_ended_' + this.meetingId)) {
         this.handleRoomEndedNotification();
       }
+      this.reconcileParticipantsList();
       this.loadSpeakQueue();
       this.loadSpotlight();
-      this.syncHostProfile();
-      this.handleGuestLeftNotification();
+    }, 1200);
+  }
+
+  private startMeetingTimer(): void {
+    const key = 'meetflow_meeting_start_' + this.meetingId;
+    let saved = localStorage.getItem(key);
+    if (!saved) {
+      saved = Date.now().toString();
+      try {
+        localStorage.setItem(key, saved);
+      } catch (e) {}
+    }
+    this.meetingStartTime = Number(saved) || Date.now();
+
+    this.updateTimerText();
+    this.timerInterval = setInterval(() => {
+      this.updateTimerText();
     }, 1000);
+  }
+
+  private updateTimerText(): void {
+    const elapsedSeconds = Math.max(0, Math.floor((Date.now() - this.meetingStartTime) / 1000));
+    const hours = Math.floor(elapsedSeconds / 3600);
+    const minutes = Math.floor((elapsedSeconds % 3600) / 60);
+    const seconds = elapsedSeconds % 60;
+
+    const pad = (n: number) => String(n).padStart(2, '0');
+    this.timerText = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
   }
 
   @HostListener('window:beforeunload')
@@ -193,6 +244,9 @@ export class MeetingRoomComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+    }
     if (this.endCheckInterval) {
       clearInterval(this.endCheckInterval);
     }
@@ -210,19 +264,44 @@ export class MeetingRoomComponent implements OnInit, OnDestroy {
 
   notifyGuestLeft(guestName: string): void {
     if (!guestName || guestName === 'Anfitrión') return;
-    const data = { name: guestName, timestamp: Date.now() };
-    localStorage.setItem('meetflow_guest_left_' + this.meetingId, JSON.stringify(data));
-    this.joinRequestService.removeApprovedRequest(guestName, this.meetingId);
-    this.removeParticipantByName(guestName);
+    const cleanName = guestName.trim();
+    
+    // Mantener la lista acumulativa de invitados salientes en localStorage
+    let currentLeft: string[] = [];
+    const saved = localStorage.getItem('meetflow_guest_left_' + this.meetingId);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          currentLeft = parsed;
+        } else if (parsed && parsed.name) {
+          currentLeft = [parsed.name];
+        }
+      } catch (e) {}
+    }
+    if (!currentLeft.some(n => n.toLowerCase() === cleanName.toLowerCase())) {
+      currentLeft.push(cleanName);
+    }
+    localStorage.setItem('meetflow_guest_left_' + this.meetingId, JSON.stringify(currentLeft));
+
+    this.joinRequestService.removeApprovedRequest(cleanName, this.meetingId);
+    this.webrtcService.sendCustomSignaling({
+      type: 'GUEST_LEFT',
+      roomCode: this.meetingId,
+      guestName: cleanName
+    });
+    this.removeParticipantByName(cleanName);
   }
 
   handleGuestLeftNotification(): void {
     const saved = localStorage.getItem('meetflow_guest_left_' + this.meetingId);
     if (saved) {
       try {
-        const data = JSON.parse(saved);
-        if (data && data.name) {
-          this.removeParticipantByName(data.name);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          parsed.forEach(name => this.removeParticipantByName(name));
+        } else if (parsed && parsed.name) {
+          this.removeParticipantByName(parsed.name);
         }
       } catch (e) {}
     }
@@ -256,9 +335,18 @@ export class MeetingRoomComponent implements OnInit, OnDestroy {
   leaveMeeting(): void {
     if (!this.authService.isGuest()) {
       // Host ends the meeting for everyone
+      const elapsedSeconds = Math.max(0, Math.floor((Date.now() - this.meetingStartTime) / 1000));
+      const mins = Math.max(1, Math.round(elapsedSeconds / 60));
+      const durationStr = mins < 60 ? `${mins} min` : `${this.timerText}`;
+      const count = this.participantsList ? this.participantsList.length : 1;
+
       this.webrtcService.endMeeting(this.meetingId);
       localStorage.setItem('meetflow_meeting_ended_' + this.meetingId, Date.now().toString());
-      this.meetingService.endMeeting(this.meetingId);
+      try {
+        localStorage.removeItem('meetflow_meeting_start_' + this.meetingId);
+      } catch (e) {}
+
+      this.meetingService.endMeeting(this.meetingId, durationStr, count);
       this.webrtcService.leaveRoom();
       this.router.navigate(['/dashboard']);
     } else {
@@ -333,6 +421,10 @@ export class MeetingRoomComponent implements OnInit, OnDestroy {
 
   toggleChat(): void {
     this.showChat = !this.showChat;
+    if (this.showChat) {
+      this.unreadChatCount = 0;
+      this.scrollChatToBottom();
+    }
   }
 
   toggleWaitingRoom(): void {
@@ -340,15 +432,57 @@ export class MeetingRoomComponent implements OnInit, OnDestroy {
   }
 
   sendMessage(): void {
-    if (this.newMessage.trim()) {
-      this.chatMessages.push({
-        sender: 'Sergio D.',
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        text: this.newMessage.trim(),
-        isMe: true
-      });
-      this.newMessage = '';
+    const trimmed = this.newMessage.trim();
+    if (!trimmed) return;
+
+    const senderName = this.currentUserName;
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    this.chatMessages.push({
+      sender: senderName,
+      time: timeStr,
+      text: trimmed,
+      isMe: true
+    });
+
+    this.saveChatMessages();
+    this.webrtcService.sendChatMessage(this.meetingId, senderName, trimmed);
+
+    this.newMessage = '';
+    this.scrollChatToBottom();
+  }
+
+  loadChatMessages(): void {
+    const saved = localStorage.getItem('meetflow_chat_messages_' + this.meetingId);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const currentName = this.currentUserName.trim().toLowerCase();
+          this.chatMessages = parsed.map(msg => ({
+            ...msg,
+            isMe: msg.sender ? msg.sender.trim().toLowerCase() === currentName : false
+          }));
+          return;
+        }
+      } catch (e) {}
     }
+    this.chatMessages = [];
+  }
+
+  saveChatMessages(): void {
+    try {
+      localStorage.setItem('meetflow_chat_messages_' + this.meetingId, JSON.stringify(this.chatMessages));
+    } catch (e) {}
+  }
+
+  scrollChatToBottom(): void {
+    setTimeout(() => {
+      const chatContainer = document.querySelector('.chat-messages-scroll');
+      if (chatContainer) {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+    }, 60);
   }
 
   // Nombre del usuario actual en la sesión
@@ -364,13 +498,11 @@ export class MeetingRoomComponent implements OnInit, OnDestroy {
   getParticipantStream(participant: any): MediaStream | null {
     if (!participant) return null;
 
-    // Si es el usuario actual en la sesión
-    if (participant.name === this.currentUserName) {
-      return (!this.isCameraOff && this.localStream) ? this.localStream : null;
-    }
+    const cleanPartName = participant.name ? participant.name.trim().toLowerCase() : '';
+    const cleanCurrent = this.currentUserName ? this.currentUserName.trim().toLowerCase() : '';
 
-    // Si es el anfitrión y el usuario actual es el anfitrión
-    if (participant.role === 'Anfitrión' && this.isHost) {
+    // Si es el usuario actual local en la sesión
+    if (cleanPartName === cleanCurrent) {
       return (!this.isCameraOff && this.localStream) ? this.localStream : null;
     }
 
@@ -380,9 +512,23 @@ export class MeetingRoomComponent implements OnInit, OnDestroy {
     }
 
     // Buscar en los streams remotos P2P recibidos vía WebRTC
-    const remote = this.remoteStreams.find(r => r.peerId === participant.id || r.peerId === participant.name);
-    if (remote && remote.stream) {
-      return remote.stream;
+    if (this.remoteStreams && this.remoteStreams.length > 0) {
+      // 1. Coincidencia por ID de peer o nombre
+      const exact = this.remoteStreams.find(r => 
+        r.peerId === participant.id || 
+        r.peerId === participant.name ||
+        (cleanPartName && r.peerId.toLowerCase().includes(cleanPartName))
+      );
+      if (exact && exact.stream) {
+        return exact.stream;
+      }
+
+      // 2. Mapeo ordenado de remotos para participantes distantes (Celular/Incógnito/Túnel)
+      const remoteParticipants = this.participantsList.filter(p => p.name.trim().toLowerCase() !== cleanCurrent);
+      const remoteIndex = remoteParticipants.findIndex(p => p.name.trim().toLowerCase() === cleanPartName);
+      if (remoteIndex >= 0 && remoteIndex < this.remoteStreams.length) {
+        return this.remoteStreams[remoteIndex].stream;
+      }
     }
 
     return null;
@@ -415,6 +561,11 @@ export class MeetingRoomComponent implements OnInit, OnDestroy {
     try {
       localStorage.setItem('meetflow_speak_queue_' + this.meetingId, JSON.stringify(this.speakQueue));
     } catch (e) {}
+    this.webrtcService.sendCustomSignaling({
+      type: 'SPEAK_QUEUE_CHANGED',
+      roomCode: this.meetingId,
+      speakQueue: this.speakQueue
+    });
   }
 
   private loadSpeakQueue(): void {
@@ -449,7 +600,7 @@ export class MeetingRoomComponent implements OnInit, OnDestroy {
         p.isMic = !this.isMicMuted;
       } else {
         // Invitados: activado automáticamente solo si están en primer plano (Spotlight)
-        p.isMic = (this.spotlightParticipant?.name === p.name);
+        p.isMic = (this.spotlightParticipant?.name?.trim().toLowerCase() === p.name?.trim().toLowerCase());
       }
     });
   }
@@ -459,11 +610,21 @@ export class MeetingRoomComponent implements OnInit, OnDestroy {
     if (!this.isHost) {
       return; // Solo el anfitrión puede cambiar el foco / otorgar la palabra
     }
-    this.spotlightParticipant = participant;
-    localStorage.setItem('meetflow_spotlight_' + this.meetingId, JSON.stringify(participant.name));
+    const cleanName = participant.name ? participant.name.trim() : '';
+    const found = this.participantsList.find(p => p.name.trim().toLowerCase() === cleanName.toLowerCase());
+    this.spotlightParticipant = found || participant;
+
+    localStorage.setItem('meetflow_spotlight_' + this.meetingId, JSON.stringify(cleanName));
     
-    // Al otorgarle la palabra, se remueve de la cola de turnos y los demás avanzan en el degradé
-    const index = this.speakQueue.indexOf(participant.name);
+    // Transmitir cambio de foco vía señalización WebSocket a todos los dispositivos (móvil/incógnito/túnel)
+    this.webrtcService.sendCustomSignaling({
+      type: 'SET_SPOTLIGHT',
+      roomCode: this.meetingId,
+      participantName: cleanName
+    });
+
+    // Al otorgarle la palabra, se remueve de la cola de turnos
+    const index = this.speakQueue.findIndex(name => name.trim().toLowerCase() === cleanName.toLowerCase());
     if (index > -1) {
       this.speakQueue.splice(index, 1);
       this.syncSpeakQueue();
@@ -472,20 +633,82 @@ export class MeetingRoomComponent implements OnInit, OnDestroy {
     this.updateMicrophoneStates();
   }
 
-  // Sincronizar reactivamente el perfil del Anfitrión en todas las pantallas
-  syncHostProfile(): void {
-    const hostPart = this.participantsList.find(p => p.role === 'Anfitrión');
-    if (hostPart) {
-      const hostUser = this.authService.getHostProfile();
-      if (hostUser) {
-        if (hostUser.avatarUrl && hostPart.avatar !== hostUser.avatarUrl) {
-          hostPart.avatar = hostUser.avatarUrl;
+  // Reconciliación unificada de participantes para todas las ventanas (Anfitrión e Invitados)
+  reconcileParticipantsList(): void {
+    const hostUser = this.authService.getHostProfile();
+    const hostName = (hostUser && hostUser.name) ? hostUser.name : 'Sergio D.';
+    const hostAvatar = (hostUser && hostUser.avatarUrl && !hostUser.avatarUrl.includes('unsplash'))
+      ? hostUser.avatarUrl
+      : `https://ui-avatars.com/api/?name=${encodeURIComponent(hostName)}&background=0D5A56&color=ffffff&bold=true`;
+
+    const newList: any[] = [
+      {
+        name: hostName,
+        role: 'Anfitrión',
+        avatar: hostAvatar,
+        isMic: !this.isMicMuted,
+        isCam: !this.isCameraOff
+      }
+    ];
+
+    let leftGuests: string[] = [];
+    const savedLeft = localStorage.getItem('meetflow_guest_left_' + this.meetingId);
+    if (savedLeft) {
+      try {
+        const parsed = JSON.parse(savedLeft);
+        if (Array.isArray(parsed)) {
+          leftGuests = parsed.map((n: any) => String(n).trim().toLowerCase());
+        } else if (parsed && parsed.name) {
+          leftGuests.push(String(parsed.name).trim().toLowerCase());
         }
-        if (hostUser.name && hostPart.name !== hostUser.name) {
-          hostPart.name = hostUser.name;
+      } catch (e) {}
+    }
+
+    const roomApproved = this.latestApprovedRequests.filter(r => 
+      r.targetMeetingId === this.meetingId || 
+      r.targetMeetingId.includes(this.meetingId) || 
+      this.meetingId.includes(r.targetMeetingId)
+    );
+
+    roomApproved.forEach(req => {
+      const cleanName = req.userName.trim();
+      const lower = cleanName.toLowerCase();
+      if (lower !== hostName.trim().toLowerCase() && !leftGuests.includes(lower)) {
+        if (!newList.some(p => p.name.trim().toLowerCase() === lower)) {
+          newList.push({
+            name: cleanName,
+            role: 'Invitado',
+            avatar: req.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanName)}&background=0284C7&color=ffffff&bold=true`,
+            isMic: (this.spotlightParticipant?.name?.trim().toLowerCase() === lower),
+            isCam: true
+          });
+        }
+      }
+    });
+
+    const currentUser = this.authService.getCurrentUser();
+    if (currentUser && currentUser.role === 'Invitado') {
+      const cleanName = currentUser.name.trim();
+      const lower = cleanName.toLowerCase();
+      if (lower !== hostName.trim().toLowerCase() && !leftGuests.includes(lower)) {
+        if (!newList.some(p => p.name.trim().toLowerCase() === lower)) {
+          newList.push({
+            name: cleanName,
+            role: 'Invitado',
+            avatar: currentUser.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanName)}&background=0284C7&color=ffffff&bold=true`,
+            isMic: (this.spotlightParticipant?.name?.trim().toLowerCase() === lower),
+            isCam: true
+          });
         }
       }
     }
+
+    this.participantsList = newList;
+    this.updateMicrophoneStates();
+  }
+
+  syncHostProfile(): void {
+    this.reconcileParticipantsList();
   }
 
   // Cargar foco (Spotlight) sincronizado desde localStorage
@@ -516,9 +739,6 @@ export class MeetingRoomComponent implements OnInit, OnDestroy {
   // Getter de rol de Anfitrión vs Invitado
   get isHost(): boolean {
     const user = this.authService.getCurrentUser();
-    if (user && user.role) {
-      return user.role === 'Anfitrión';
-    }
-    return !this.authService.isGuest();
+    return !!(user && user.role === 'Anfitrión');
   }
 }

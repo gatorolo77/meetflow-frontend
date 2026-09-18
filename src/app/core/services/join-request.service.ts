@@ -33,17 +33,18 @@ export class JoinRequestService {
       }
     });
 
-    // Fallback periodic check every 1.5s inside Angular Zone for cross-tab reactivity
+    // Fallback periodic check every 1.5s inside Angular Zone for cross-tab reactivity & Spring Boot backend sync
     setInterval(() => {
       this.checkStorageDiff();
+      this.fetchBackendRequests();
     }, 1500);
   }
 
-  private fetchBackendRequests(): void {
-    this.http.get<any[]>(`${this.apiUrl}/pending`).pipe(
+  public fetchBackendRequests(): void {
+    this.http.get<any[]>(`${this.apiUrl}/all`).pipe(
       catchError(() => of([]))
     ).subscribe(backendReqs => {
-      if (backendReqs && backendReqs.length > 0) {
+      if (Array.isArray(backendReqs)) {
         const mapped: JoinRequest[] = backendReqs.map(r => ({
           id: 'backend-' + r.id,
           userName: r.applicantName,
@@ -53,16 +54,44 @@ export class JoinRequestService {
           requestedAt: new Date(r.requestedAt || Date.now()),
           status: r.status as any
         }));
-        
+
         const current = this.joinRequestsSubject.getValue();
-        const merged = [...current];
+        let updated = false;
+
+        // 1. Depurar solicitudes creadas por backend que ya no existen en la base de datos (ej: invitado salió)
+        let merged = current.filter(c => {
+          if (c.id && c.id.startsWith('backend-')) {
+            const existsInBackend = mapped.some(m => m.id === c.id);
+            if (!existsInBackend) {
+              updated = true;
+              return false; // Remover del estado activo
+            }
+          }
+          return true;
+        });
+
+        // 2. Fusión de elementos nuevos o modificados
         mapped.forEach(m => {
-          const existing = merged.find(c => c.id === m.id || (c.userName.trim().toLowerCase() === m.userName.trim().toLowerCase() && c.targetMeetingId === m.targetMeetingId));
-          if (!existing) {
+          const index = merged.findIndex(c => 
+            c.id === m.id || 
+            (c.userName.trim().toLowerCase() === m.userName.trim().toLowerCase() && 
+             (c.targetMeetingId === m.targetMeetingId || c.targetMeetingId.includes(m.targetMeetingId) || m.targetMeetingId.includes(c.targetMeetingId)))
+          );
+          if (index === -1) {
             merged.push(m);
+            updated = true;
+          } else {
+            if (merged[index].status !== m.status || merged[index].targetMeetingId !== m.targetMeetingId) {
+              const originalId = merged[index].id;
+              merged[index] = { ...merged[index], ...m, id: originalId };
+              updated = true;
+            }
           }
         });
-        this.saveToStorage(merged);
+
+        if (updated) {
+          this.saveToStorage(merged);
+        }
       }
     });
   }
@@ -193,6 +222,18 @@ export class JoinRequestService {
     );
 
     if (existing) {
+      existing.status = 'PENDING';
+      existing.requestedAt = new Date();
+      if (avatarUrl) existing.avatarUrl = avatarUrl;
+      
+      this.http.post<any>(this.apiUrl, {
+        name: existing.userName,
+        meetingCode: existing.targetMeetingId,
+        meetingTitle: existing.targetMeetingTitle,
+        avatarUrl: existing.avatarUrl
+      }).pipe(catchError(() => of(null))).subscribe();
+
+      this.saveToStorage(current);
       return existing;
     }
 
@@ -225,7 +266,17 @@ export class JoinRequestService {
 
   watchRequest(requestId: string): Observable<JoinRequest | undefined> {
     return this.joinRequestsSubject.pipe(
-      map(requests => requests.find(r => r.id === requestId))
+      map(requests => {
+        const match = requests.find(r => r.id === requestId);
+        if (match) return match;
+        // Fallback match by username or backend ID format
+        const cleanReqId = requestId.replace('backend-', '');
+        return requests.find(r => 
+          r.id === requestId || 
+          r.id === 'backend-' + cleanReqId || 
+          r.userName.trim().toLowerCase() === requestId.trim().toLowerCase()
+        );
+      })
     );
   }
 
@@ -236,13 +287,30 @@ export class JoinRequestService {
       try { current = JSON.parse(saved); } catch (e) {}
     }
 
-    if (requestId.startsWith('backend-')) {
-      const numericId = requestId.replace('backend-', '');
-      this.http.put(`${this.apiUrl}/${numericId}/approve`, {}).pipe(catchError(() => of(null))).subscribe();
+    const targetReq = current.find(r => r.id === requestId);
+    if (targetReq) {
+      if (targetReq.id.startsWith('backend-')) {
+        const numericId = targetReq.id.replace('backend-', '');
+        this.http.put(`${this.apiUrl}/${numericId}/approve`, {}).pipe(catchError(() => of(null))).subscribe();
+      } else {
+        this.http.get<any[]>(`${this.apiUrl}/all`).pipe(
+          catchError(() => of([]))
+        ).subscribe(backendReqs => {
+          const match = backendReqs.find(b => 
+            b.applicantName.trim().toLowerCase() === targetReq.userName.trim().toLowerCase() &&
+            (b.targetMeetingCode === targetReq.targetMeetingId || 
+             b.targetMeetingCode.includes(targetReq.targetMeetingId) || 
+             targetReq.targetMeetingId.includes(b.targetMeetingCode))
+          );
+          if (match) {
+            this.http.put(`${this.apiUrl}/${match.id}/approve`, {}).pipe(catchError(() => of(null))).subscribe();
+          }
+        });
+      }
     }
 
     const updated = current.map(req => {
-      if (req.id === requestId) {
+      if (req.id === requestId || (targetReq && req.userName.trim().toLowerCase() === targetReq.userName.trim().toLowerCase())) {
         return { ...req, status: 'APPROVED' as const };
       }
       return req;
@@ -257,13 +325,25 @@ export class JoinRequestService {
       try { current = JSON.parse(saved); } catch (e) {}
     }
 
-    if (requestId.startsWith('backend-')) {
-      const numericId = requestId.replace('backend-', '');
-      this.http.put(`${this.apiUrl}/${numericId}/reject`, {}).pipe(catchError(() => of(null))).subscribe();
+    const targetReq = current.find(r => r.id === requestId);
+    if (targetReq) {
+      if (targetReq.id.startsWith('backend-')) {
+        const numericId = targetReq.id.replace('backend-', '');
+        this.http.put(`${this.apiUrl}/${numericId}/reject`, {}).pipe(catchError(() => of(null))).subscribe();
+      } else {
+        this.http.get<any[]>(`${this.apiUrl}/all`).pipe(
+          catchError(() => of([]))
+        ).subscribe(backendReqs => {
+          const match = backendReqs.find(b => b.applicantName.trim().toLowerCase() === targetReq.userName.trim().toLowerCase());
+          if (match) {
+            this.http.put(`${this.apiUrl}/${match.id}/reject`, {}).pipe(catchError(() => of(null))).subscribe();
+          }
+        });
+      }
     }
 
     const updated = current.map(req => {
-      if (req.id === requestId) {
+      if (req.id === requestId || (targetReq && req.userName.trim().toLowerCase() === targetReq.userName.trim().toLowerCase())) {
         return { ...req, status: 'REJECTED' as const };
       }
       return req;
@@ -272,6 +352,13 @@ export class JoinRequestService {
   }
 
   removeApprovedRequest(userName: string, targetMeetingId: string): void {
+    if (!userName || !targetMeetingId) return;
+
+    // Sincronizar la salida con el backend Spring Boot para eliminar la solicitud aprobada de la base de datos
+    this.http.put(`${this.apiUrl}/leave?name=${encodeURIComponent(userName)}&meetingCode=${encodeURIComponent(targetMeetingId)}`, {})
+      .pipe(catchError(() => of(null)))
+      .subscribe();
+
     const saved = localStorage.getItem(this.STORAGE_KEY);
     let current: JoinRequest[] = this.joinRequestsSubject.getValue();
     if (saved) {

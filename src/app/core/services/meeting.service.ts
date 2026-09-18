@@ -48,9 +48,12 @@ export class MeetingService {
       title: 'Revisión de proyecto',
       groupOrTeam: 'Proyecto Phoenix',
       hostName: 'Sergio D.',
-      scheduledTime: 'Vie, 13 Jun',
+      scheduledTime: 'Ayer, 18:00',
       durationMinutes: 30,
       isLive: false,
+      isEnded: true,
+      endedDurationText: '30 min',
+      finalParticipantCount: 3,
       participants: [
         { id: 'u2', name: 'Diego Morales', role: 'PARTICIPANT', isMicActive: false, isCameraActive: false, isSharingScreen: false, connectionQuality: 'EXCELLENT', joinedAt: new Date() },
         { id: 'u3', name: 'Lucía Fernández', role: 'PARTICIPANT', isMicActive: false, isCameraActive: false, isSharingScreen: false, connectionQuality: 'EXCELLENT', joinedAt: new Date() },
@@ -169,7 +172,7 @@ export class MeetingService {
     return newMeeting;
   }
 
-  endMeeting(meetingCode: string): void {
+  endMeeting(meetingCode: string, endedDurationText?: string, participantCount?: number): void {
     this.http.put(`${this.apiUrl}/${meetingCode}/end`, {}).pipe(
       catchError(() => of(null))
     ).subscribe();
@@ -177,7 +180,14 @@ export class MeetingService {
     const current = this.upcomingMeetingsSubject.getValue();
     const updated = current.map(m => {
       if (m.id === meetingCode || m.code === meetingCode) {
-        return { ...m, isLive: false };
+        return { 
+          ...m, 
+          isLive: false,
+          isEnded: true,
+          endedDurationText: endedDurationText || `${m.durationMinutes} min`,
+          finalParticipantCount: participantCount !== undefined ? participantCount : (m.participants ? m.participants.length : 1),
+          endedAtTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
       }
       return m;
     });

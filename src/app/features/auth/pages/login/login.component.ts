@@ -49,7 +49,14 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.registeredUsers = this.authService.getRegisteredUsers();
     
     const qParams = this.route.snapshot.queryParams;
-    const isGuestLink = qParams['mode'] === 'GUEST' || !!qParams['code'];
+    const returnUrlParam = qParams['returnUrl'];
+    
+    let extractedCode = qParams['code'];
+    if (!extractedCode && returnUrlParam && returnUrlParam.includes('/meetings/')) {
+      extractedCode = returnUrlParam.split('/meetings/')[1];
+    }
+
+    const isGuestLink = qParams['mode'] === 'GUEST' || !!extractedCode;
 
     // Only redirect registered users to dashboard if NOT opening an explicit guest meeting link
     if (!isGuestLink && this.authService.isLoggedIn() && !this.authService.isGuest()) {
@@ -57,15 +64,14 @@ export class LoginComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const returnUrlParam = qParams['returnUrl'];
     if (returnUrlParam) {
       this.returnUrl = returnUrlParam;
     }
 
     if (isGuestLink) {
       this.loginMode = 'GUEST';
-      if (qParams['code']) {
-        this.guestCodeInput = qParams['code'];
+      if (extractedCode) {
+        this.guestCodeInput = extractedCode;
       }
       if (qParams['guestName']) {
         this.guestNameInput = qParams['guestName'];

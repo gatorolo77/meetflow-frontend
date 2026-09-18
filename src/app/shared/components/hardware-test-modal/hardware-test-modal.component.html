@@ -26,9 +26,21 @@
 
     <!-- Body Container -->
     <div class="modal-body">
+      <!-- Unsecure Context Warning Banner -->
+      <div class="unsecure-context-warning" *ngIf="isUnsecureContext" style="background-color: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #f87171; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; line-height: 1.4; display: flex; align-items: center; gap: 8px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        <div>
+          <strong>Atención Navegador Móvil:</strong> Estás accediendo por dirección IP (HTTP no seguro). Android/iOS bloquean la cámara y micrófono salvo cuando ingresas vía el enlace seguro <strong>HTTPS (Cloudflare)</strong>.
+        </div>
+      </div>
+
       <!-- Live Video Preview & Audio Meter Box -->
       <div class="test-preview-box" [class.camera-off]="!isCamActive">
-        <video #videoPreview autoplay muted playsinline class="video-preview-feed" *ngIf="isCamActive"></video>
+        <video #videoPreview [appSrcObject]="stream" [srcObject]="stream" autoplay muted playsinline class="video-preview-feed" *ngIf="isCamActive"></video>
 
         <!-- Camera Off Placeholder -->
         <div class="cam-off-placeholder" *ngIf="!isCamActive">

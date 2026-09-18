@@ -15,10 +15,18 @@ export class WebRtcService {
   private localStreamSubject = new BehaviorSubject<MediaStream | null>(null);
   private remoteStreamsSubject = new BehaviorSubject<RemotePeerStream[]>([]);
   private meetingEndedSubject = new Subject<string>();
+  private spotlightChangedSubject = new Subject<string>();
+  private speakQueueChangedSubject = new Subject<{ roomCode: string; speakQueue: string[] }>();
+  private guestLeftSubject = new Subject<{ roomCode: string; guestName: string }>();
+  private chatMessageSubject = new Subject<{ roomCode: string; sender: string; time: string; text: string }>();
 
   localStream$: Observable<MediaStream | null> = this.localStreamSubject.asObservable();
   remoteStreams$: Observable<RemotePeerStream[]> = this.remoteStreamsSubject.asObservable();
   meetingEnded$: Observable<string> = this.meetingEndedSubject.asObservable();
+  spotlightChanged$: Observable<string> = this.spotlightChangedSubject.asObservable();
+  speakQueueChanged$: Observable<{ roomCode: string; speakQueue: string[] }> = this.speakQueueChangedSubject.asObservable();
+  guestLeft$: Observable<{ roomCode: string; guestName: string }> = this.guestLeftSubject.asObservable();
+  chatMessage$: Observable<{ roomCode: string; sender: string; time: string; text: string }> = this.chatMessageSubject.asObservable();
 
   private peerConnections: Map<string, RTCPeerConnection> = new Map();
   private currentRoomCode = '';
@@ -32,15 +40,93 @@ export class WebRtcService {
     ]
   };
 
-  async initLocalMedia(video = true, audio = true): Promise<MediaStream | null> {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video, audio });
+  setLocalStream(stream: MediaStream): void {
+    if (stream) {
       this.localStreamSubject.next(stream);
-      return stream;
-    } catch (err) {
-      console.warn('Media devices warning: Camera/Mic permissions not granted or simulated.', err);
+      this.updateTracksInPeerConnections(stream);
+    }
+  }
+
+  async initLocalMedia(video: boolean | MediaTrackConstraints = true, audio = true): Promise<MediaStream | null> {
+    const existing = this.localStreamSubject.getValue();
+    if (existing && existing.active && existing.getTracks().some(t => t.readyState === 'live')) {
+      console.log('Reutilizando stream de medios local ya activo.');
+      this.updateTracksInPeerConnections(existing);
+      return existing;
+    }
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      console.warn('getUserMedia no está disponible en este navegador o entorno (requiere HTTPS en dispositivos móviles).');
       return null;
     }
+
+    let stream: MediaStream | null = null;
+    const videoConstraints = typeof video === 'boolean' 
+      ? (video ? { facingMode: 'user' } : false) 
+      : video;
+
+    try {
+      // 1. Intento primario: Cámara frontal + Micrófono
+      stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio });
+    } catch (err) {
+      console.warn('Intento de cámara frontal (facingMode) falló, intentando constraints estándar:', err);
+      try {
+        // 2. Fallback estándar: Video + Audio genérico
+        stream = await navigator.mediaDevices.getUserMedia({ video: !!video, audio });
+      } catch (err2) {
+        console.warn('Intento combinado falló, evaluando dispositivos individuales (audio / video por separado):', err2);
+        try {
+          // 3. Fallback solo audio si el video está bloqueado
+          if (audio) {
+            const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            stream = audioStream;
+            // Intentar adjuntar video secundario si está disponible
+            if (video) {
+              try {
+                const vidStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                vidStream.getVideoTracks().forEach(t => stream!.addTrack(t));
+              } catch (eVid) {}
+            }
+          }
+        } catch (err3) {
+          try {
+            // 4. Fallback solo video si el micrófono está bloqueado
+            if (video) {
+              stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+            }
+          } catch (err4) {
+            console.error('No se pudo acceder a ningún dispositivo de medios:', err4);
+            return null;
+          }
+        }
+      }
+    }
+
+    if (stream) {
+      this.localStreamSubject.next(stream);
+      this.updateTracksInPeerConnections(stream);
+    }
+    return stream;
+  }
+
+  // Actualizar o re-vincular dinámicamente las pistas locales en todas las conexiones P2P activas
+  public updateTracksInPeerConnections(stream: MediaStream): void {
+    if (!stream) return;
+    this.peerConnections.forEach((pc, peerId) => {
+      const senders = pc.getSenders();
+      stream.getTracks().forEach(track => {
+        const existingSender = senders.find(s => s.track && s.track.kind === track.kind);
+        if (existingSender) {
+          existingSender.replaceTrack(track).catch(e => console.warn('replaceTrack error:', e));
+        } else {
+          try {
+            pc.addTrack(track, stream);
+          } catch (e) {
+            console.warn('addTrack error:', e);
+          }
+        }
+      });
+    });
   }
 
   joinRoom(roomCode: string): void {
@@ -72,8 +158,40 @@ export class WebRtcService {
       } else if (data.type === 'MEETING_ENDED') {
         console.log('🛑 Reunión finalizada por el anfitrión para la sala:', data.roomCode);
         this.meetingEndedSubject.next(data.roomCode);
+      } else if (data.type === 'SET_SPOTLIGHT' && data.participantName) {
+        console.log('🎙️ Foco (Spotlight) cambiado por señalización a:', data.participantName);
+        this.spotlightChangedSubject.next(data.participantName);
+      } else if (data.type === 'SPEAK_QUEUE_CHANGED' && data.speakQueue) {
+        console.log('🖐️ Cola de turnos cambiada por señalización:', data.speakQueue);
+        this.speakQueueChangedSubject.next({ roomCode: data.roomCode, speakQueue: data.speakQueue });
+      } else if (data.type === 'GUEST_LEFT' && data.guestName) {
+        console.log('🚪 Invitado retirado por señalización:', data.guestName);
+        this.guestLeftSubject.next({ roomCode: data.roomCode, guestName: data.guestName });
+      } else if (data.type === 'CHAT_MESSAGE' && data.text) {
+        console.log('💬 Mensaje de chat recibido por señalización de:', data.sender);
+        this.chatMessageSubject.next({
+          roomCode: data.roomCode,
+          sender: data.sender,
+          time: data.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          text: data.text
+        });
       }
     };
+  }
+
+  sendChatMessage(roomCode: string, sender: string, text: string): void {
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    this.sendCustomSignaling({
+      type: 'CHAT_MESSAGE',
+      roomCode: roomCode,
+      sender: sender,
+      time: time,
+      text: text
+    });
+  }
+
+  sendCustomSignaling(messageObj: any): void {
+    this.sendSignalingMessage(messageObj);
   }
 
   endMeeting(roomCode: string): void {

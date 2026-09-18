@@ -8,6 +8,7 @@ import { filter } from 'rxjs/operators';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
+  title = 'meetflow';
   isStandaloneView = false;
 
   constructor(private router: Router) {

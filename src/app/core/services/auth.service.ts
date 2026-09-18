@@ -18,21 +18,21 @@ export class AuthService {
       name: 'Sergio D.',
       email: 'sergio.d@meetflow.com',
       role: 'Anfitrión',
-      avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80'
+      avatarUrl: 'https://ui-avatars.com/api/?name=Sergio+D&background=0D5A56&color=ffffff&bold=true'
     },
     {
       id: 'u-2',
       name: 'Ana García',
       email: 'ana.garcia@meetflow.com',
       role: 'Anfitrión',
-      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
+      avatarUrl: 'https://ui-avatars.com/api/?name=Ana+Garcia&background=0284C7&color=ffffff&bold=true'
     },
     {
       id: 'u-3',
       name: 'Diego Morales',
       email: 'diego.morales@meetflow.com',
       role: 'Anfitrión',
-      avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80'
+      avatarUrl: 'https://ui-avatars.com/api/?name=Diego+Morales&background=A4613B&color=ffffff&bold=true'
     }
   ];
 
@@ -190,8 +190,9 @@ export class AuthService {
       catchError(() => of(null))
     ).subscribe();
 
-    // Store guest session ONLY in sessionStorage for tab isolation
+    // Store guest session in sessionStorage and clear localStorage host user to prevent role leakage
     sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(guestUser));
+    localStorage.removeItem(this.STORAGE_KEY);
     this.currentUserSubject.next(guestUser);
     return of({ success: true });
   }

@@ -58,17 +58,28 @@ export class AgendaComponent implements OnInit {
       const printWindow = window.open('', '_blank', 'width=900,height=750');
       if (!printWindow) return;
 
-      const rowsHtml = meetings.map((m, i) => `
-        <tr>
-          <td><strong>${i + 1}</strong></td>
-          <td>${m.title} ${m.isLive ? '<span class="badge-live">EN VIVO</span>' : ''}</td>
-          <td>${m.groupOrTeam}</td>
-          <td>${m.hostName || 'Sergio D.'}</td>
-          <td>${m.scheduledTime}</td>
-          <td>${m.durationMinutes} min</td>
-          <td><code>${m.code || m.id}</code></td>
-        </tr>
-      `).join('');
+      const rowsHtml = meetings.map((m, i) => {
+        const pCount = (m.finalParticipantCount !== undefined && m.finalParticipantCount !== null)
+          ? m.finalParticipantCount
+          : (m.participants ? m.participants.length : 0);
+        const durStr = m.endedDurationText || `${m.durationMinutes} min`;
+        const statusBadge = (m.isEnded || !m.isLive)
+          ? '<span class="badge-ended">TERMINADO</span>'
+          : '<span class="badge-live">EN VIVO</span>';
+
+        return `
+          <tr>
+            <td><strong>${i + 1}</strong></td>
+            <td>${m.title} ${statusBadge}</td>
+            <td>${m.groupOrTeam}</td>
+            <td>${m.hostName || 'Sergio D.'}</td>
+            <td>${m.scheduledTime}</td>
+            <td>${durStr}</td>
+            <td>${pCount} integrantes</td>
+            <td><code>${m.code || m.id}</code></td>
+          </tr>
+        `;
+      }).join('');
 
       const htmlContent = `
         <!DOCTYPE html>
@@ -149,6 +160,15 @@ export class AgendaComponent implements OnInit {
               border-radius: 4px;
               margin-left: 6px;
             }
+            .badge-ended {
+              background-color: #6B7280;
+              color: white;
+              font-size: 10px;
+              font-weight: 800;
+              padding: 2px 6px;
+              border-radius: 4px;
+              margin-left: 6px;
+            }
             .empty-text {
               text-align: center;
               padding: 40px;
@@ -191,6 +211,7 @@ export class AgendaComponent implements OnInit {
                   <th>Anfitrión</th>
                   <th>Horario / Fecha</th>
                   <th>Duración</th>
+                  <th>Integrantes</th>
                   <th>Código de Reunión</th>
                 </tr>
               </thead>

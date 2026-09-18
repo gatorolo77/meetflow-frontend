@@ -35,10 +35,12 @@ import { WebmasterDashboardComponent } from './features/webmaster/pages/webmaste
 import { LandingComponent } from './features/landing/landing.component';
 import { BookDetailComponent } from './features/books/pages/book-detail/book-detail.component';
 import { OutreachModalComponent } from './features/dashboard/components/outreach-modal/outreach-modal.component';
+import { SrcObjectDirective } from './shared/directives/src-object.directive';
 
 @NgModule({
   declarations: [
     AppComponent,
+    SrcObjectDirective,
     LogoComponent,
     SidebarComponent,
     TopbarComponent,
