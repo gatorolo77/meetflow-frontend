@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { JoinRequest } from '../models/join-request.model';
 import { environment } from '../../../environments/environment';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -17,7 +18,8 @@ export class JoinRequestService {
 
   constructor(
     private ngZone: NgZone,
-    private http: HttpClient
+    private http: HttpClient,
+    private authService: AuthService
   ) {
     this.loadFromStorage();
 
@@ -173,7 +175,10 @@ export class JoinRequestService {
 
     const currentPendingCount = requests.filter(r => r.status === 'PENDING').length;
     if (this.previousPendingCount >= 0 && currentPendingCount > this.previousPendingCount) {
-      this.playNotificationChime();
+      const currentUser = this.authService.getCurrentUser();
+      if (currentUser && currentUser.role === 'Anfitrión') {
+        this.playNotificationChime();
+      }
     }
     this.previousPendingCount = currentPendingCount;
 

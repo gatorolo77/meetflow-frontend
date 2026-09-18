@@ -31,7 +31,7 @@
 
   <div
     class="toast-notifications-container"
-    *ngIf="pendingRequestsForRoom.length > 0"
+    *ngIf="isHost && pendingRequestsForRoom.length > 0"
   >
     <div
       class="in-meeting-request-toast"
@@ -145,6 +145,7 @@
               <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
             </svg>
             <span class="icon-count">{{ participantsList.length }}</span>
+            <span class="header-waiting-badge" *ngIf="speakQueue.length > 0" title="Turnos solicitados para hablar">🖐️ {{ speakQueue.length }}</span>
           </button>
 
           <button
@@ -422,6 +423,7 @@
                 <circle cx="9" cy="7" r="4"></circle>
               </svg>
               <span class="arrow-down">˅</span>
+              <span class="chat-unread-badge" *ngIf="speakQueue.length > 0" style="background-color: #EF4444;" title="Turnos solicitados para hablar">🖐️ {{ speakQueue.length }}</span>
             </button>
 
             <button
@@ -571,7 +573,7 @@
 
           <div
             class="pending-requests-section"
-            *ngIf="pendingRequestsForRoom.length > 0"
+            *ngIf="isHost && pendingRequestsForRoom.length > 0"
           >
             <span class="pending-section-badge"
               >En espera de ingreso ({{ pendingRequestsForRoom.length }})</span

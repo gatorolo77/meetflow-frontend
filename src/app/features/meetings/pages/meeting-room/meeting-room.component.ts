@@ -108,6 +108,10 @@ export class MeetingRoomComponent implements OnInit, OnDestroy {
         }
       }),
       this.joinRequestService.getPendingRequests().subscribe(requests => {
+        if (!this.isHost) {
+          this.pendingRequestsForRoom = [];
+          return;
+        }
         this.pendingRequestsForRoom = requests.filter(r => 
           r.targetMeetingId === this.meetingId || 
           r.targetMeetingId.includes(this.meetingId) || 
@@ -134,10 +138,15 @@ export class MeetingRoomComponent implements OnInit, OnDestroy {
       }),
       this.webrtcService.speakQueueChanged$.subscribe(data => {
         if (data && (data.roomCode === this.meetingId || data.roomCode.includes(this.meetingId) || this.meetingId.includes(data.roomCode))) {
+          const prevCount = this.speakQueue ? this.speakQueue.length : 0;
           this.speakQueue = data.speakQueue || [];
           try {
             localStorage.setItem('meetflow_speak_queue_' + this.meetingId, JSON.stringify(this.speakQueue));
           } catch (e) {}
+          if (this.isHost && this.speakQueue.length > prevCount) {
+            this.joinRequestService.playNotificationChime();
+          }
+          this.updateMicrophoneStates();
         }
       }),
       this.webrtcService.guestLeft$.subscribe(data => {
@@ -548,11 +557,19 @@ export class MeetingRoomComponent implements OnInit, OnDestroy {
     if (event) {
       event.stopPropagation();
     }
-    const index = this.speakQueue.indexOf(guestName);
-    if (index > -1) {
-      this.speakQueue.splice(index, 1);
+    const cleanGuest = guestName ? guestName.trim() : '';
+    if (!cleanGuest) return;
+
+    const existingIndex = this.speakQueue.findIndex(name => {
+      const c = name.trim().toLowerCase();
+      const g = cleanGuest.toLowerCase();
+      return c === g || c.includes(g) || g.includes(c);
+    });
+
+    if (existingIndex > -1) {
+      this.speakQueue.splice(existingIndex, 1);
     } else {
-      this.speakQueue.push(guestName);
+      this.speakQueue.push(cleanGuest);
     }
     this.syncSpeakQueue();
   }
@@ -579,7 +596,12 @@ export class MeetingRoomComponent implements OnInit, OnDestroy {
 
   // Obtener posición en la cola de turnos (1-based, 0 si no solicitó)
   getQueuePosition(guestName: string): number {
-    const index = this.speakQueue.indexOf(guestName);
+    if (!guestName || !this.speakQueue || this.speakQueue.length === 0) return 0;
+    const cleanGuest = guestName.trim().toLowerCase();
+    const index = this.speakQueue.findIndex(name => {
+      const cleanName = name.trim().toLowerCase();
+      return cleanName === cleanGuest || cleanName.includes(cleanGuest) || cleanGuest.includes(cleanName);
+    });
     return index > -1 ? index + 1 : 0;
   }
 
