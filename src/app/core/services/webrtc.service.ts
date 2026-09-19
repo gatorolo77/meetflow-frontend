@@ -19,6 +19,8 @@ export class WebRtcService {
   private speakQueueChangedSubject = new Subject<{ roomCode: string; speakQueue: string[] }>();
   private guestLeftSubject = new Subject<{ roomCode: string; guestName: string }>();
   private chatMessageSubject = new Subject<{ roomCode: string; sender: string; time: string; text: string }>();
+  private screenShareStartedSubject = new Subject<{ roomCode: string; participantName: string }>();
+  private screenShareStoppedSubject = new Subject<{ roomCode: string; participantName: string }>();
 
   localStream$: Observable<MediaStream | null> = this.localStreamSubject.asObservable();
   remoteStreams$: Observable<RemotePeerStream[]> = this.remoteStreamsSubject.asObservable();
@@ -27,6 +29,8 @@ export class WebRtcService {
   speakQueueChanged$: Observable<{ roomCode: string; speakQueue: string[] }> = this.speakQueueChangedSubject.asObservable();
   guestLeft$: Observable<{ roomCode: string; guestName: string }> = this.guestLeftSubject.asObservable();
   chatMessage$: Observable<{ roomCode: string; sender: string; time: string; text: string }> = this.chatMessageSubject.asObservable();
+  screenShareStarted$: Observable<{ roomCode: string; participantName: string }> = this.screenShareStartedSubject.asObservable();
+  screenShareStopped$: Observable<{ roomCode: string; participantName: string }> = this.screenShareStoppedSubject.asObservable();
 
   private peerConnections: Map<string, RTCPeerConnection> = new Map();
   private currentRoomCode = '';
@@ -175,6 +179,12 @@ export class WebRtcService {
           time: data.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           text: data.text
         });
+      } else if (data.type === 'SCREEN_SHARE_STARTED' && data.participantName) {
+        console.log('🖥️ Pantalla compartida iniciada por:', data.participantName);
+        this.screenShareStartedSubject.next({ roomCode: data.roomCode, participantName: data.participantName });
+      } else if (data.type === 'SCREEN_SHARE_STOPPED' && data.participantName) {
+        console.log('🖥️ Pantalla compartida finalizada por:', data.participantName);
+        this.screenShareStoppedSubject.next({ roomCode: data.roomCode, participantName: data.participantName });
       }
     };
   }
@@ -303,11 +313,103 @@ export class WebRtcService {
     }
   }
 
+  private screenStream: MediaStream | null = null;
+  private originalVideoTrack: MediaStreamTrack | null = null;
+
   toggleCamera(enabled: boolean): void {
     const stream = this.localStreamSubject.getValue();
     if (stream) {
       stream.getVideoTracks().forEach(t => t.enabled = enabled);
     }
+  }
+
+  async startScreenShare(roomCode: string, participantName: string): Promise<MediaStream | null> {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+      console.warn('getDisplayMedia no está disponible en este navegador o entorno.');
+      return null;
+    }
+
+    try {
+      const displayStream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: true
+      });
+
+      const screenTrack = displayStream.getVideoTracks()[0];
+      if (!screenTrack) return null;
+
+      this.screenStream = displayStream;
+
+      const localStream = this.localStreamSubject.getValue();
+      if (localStream) {
+        const cameraTrack = localStream.getVideoTracks()[0];
+        if (cameraTrack) {
+          this.originalVideoTrack = cameraTrack;
+        }
+      }
+
+      this.peerConnections.forEach(pc => {
+        const senders = pc.getSenders();
+        const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+        if (videoSender) {
+          videoSender.replaceTrack(screenTrack).catch(e => console.warn('replaceTrack screen error:', e));
+        }
+      });
+
+      const combinedTracks: MediaStreamTrack[] = [screenTrack];
+      if (localStream && localStream.getAudioTracks().length > 0) {
+        combinedTracks.push(localStream.getAudioTracks()[0]);
+      }
+      const localScreenStream = new MediaStream(combinedTracks);
+      this.localStreamSubject.next(localScreenStream);
+
+      screenTrack.onended = () => {
+        this.stopScreenShare(roomCode, participantName);
+      };
+
+      this.sendCustomSignaling({
+        type: 'SCREEN_SHARE_STARTED',
+        roomCode: roomCode,
+        participantName: participantName
+      });
+
+      return localScreenStream;
+    } catch (err) {
+      console.warn('Error o cancelación al compartir pantalla:', err);
+      return null;
+    }
+  }
+
+  stopScreenShare(roomCode: string, participantName: string): void {
+    if (this.screenStream) {
+      this.screenStream.getTracks().forEach(t => t.stop());
+      this.screenStream = null;
+    }
+
+    if (this.originalVideoTrack) {
+      const cameraTrack = this.originalVideoTrack;
+      this.peerConnections.forEach(pc => {
+        const senders = pc.getSenders();
+        const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+        if (videoSender) {
+          videoSender.replaceTrack(cameraTrack).catch(e => console.warn('replaceTrack camera restore error:', e));
+        }
+      });
+
+      const localStream = this.localStreamSubject.getValue();
+      if (localStream) {
+        const audioTracks = localStream.getAudioTracks();
+        const restoredStream = new MediaStream([cameraTrack, ...audioTracks]);
+        this.localStreamSubject.next(restoredStream);
+      }
+      this.originalVideoTrack = null;
+    }
+
+    this.sendCustomSignaling({
+      type: 'SCREEN_SHARE_STOPPED',
+      roomCode: roomCode,
+      participantName: participantName
+    });
   }
 
   leaveRoom(): void {

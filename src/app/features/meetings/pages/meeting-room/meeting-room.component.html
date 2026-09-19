@@ -242,9 +242,9 @@
               class="spotlight-feed-media"
             />
 
-            <div class="spotlight-header-badge">
+            <div class="spotlight-header-badge" [class.screen-sharing-active]="spotlightParticipant?.isSharingScreen || (isSharingScreen && spotlightParticipant?.name === currentUserName)">
               <span class="spotlight-live-dot"></span>
-              <span class="spotlight-badge-title">EN PRIMER PLANO:</span>
+              <span class="spotlight-badge-title">{{ (spotlightParticipant?.isSharingScreen || (isSharingScreen && spotlightParticipant?.name === currentUserName)) ? 'COMPARTIENDO PANTALLA 🖥️:' : 'EN PRIMER PLANO:' }}</span>
               <strong class="spotlight-speaker-name">{{ spotlightParticipant?.name || hostParticipant.name }}</strong>
               <span class="spotlight-role-tag">({{ spotlightParticipant?.role || 'Hablante' }})</span>
             </div>

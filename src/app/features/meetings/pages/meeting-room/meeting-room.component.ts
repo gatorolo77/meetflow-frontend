@@ -174,6 +174,34 @@ export class MeetingRoomComponent implements OnInit, OnDestroy {
             }
           }
         }
+      }),
+      this.webrtcService.screenShareStarted$.subscribe(data => {
+        if (data && (data.roomCode === this.meetingId || data.roomCode.includes(this.meetingId) || this.meetingId.includes(data.roomCode))) {
+          const sharingName = data.participantName.trim().toLowerCase();
+          const found = this.participantsList.find(p => p.name.trim().toLowerCase() === sharingName);
+          if (found) {
+            found.isSharingScreen = true;
+            this.spotlightParticipant = found;
+          }
+          if (sharingName === this.currentUserName.trim().toLowerCase()) {
+            this.isSharingScreen = true;
+          }
+        }
+      }),
+      this.webrtcService.screenShareStopped$.subscribe(data => {
+        if (data && (data.roomCode === this.meetingId || data.roomCode.includes(this.meetingId) || this.meetingId.includes(data.roomCode))) {
+          const sharingName = data.participantName.trim().toLowerCase();
+          const found = this.participantsList.find(p => p.name.trim().toLowerCase() === sharingName);
+          if (found) {
+            found.isSharingScreen = false;
+          }
+          if (sharingName === this.currentUserName.trim().toLowerCase()) {
+            this.isSharingScreen = false;
+          }
+          if (this.spotlightParticipant && this.spotlightParticipant.name.trim().toLowerCase() === sharingName) {
+            this.spotlightParticipant = this.hostParticipant;
+          }
+        }
       })
     );
 
@@ -420,8 +448,21 @@ export class MeetingRoomComponent implements OnInit, OnDestroy {
     this.participantsList[0].isCam = !this.isCameraOff;
   }
 
-  toggleScreenShare(): void {
-    this.isSharingScreen = !this.isSharingScreen;
+  async toggleScreenShare(): Promise<void> {
+    if (this.isSharingScreen) {
+      this.webrtcService.stopScreenShare(this.meetingId, this.currentUserName);
+      this.isSharingScreen = false;
+    } else {
+      const screenStream = await this.webrtcService.startScreenShare(this.meetingId, this.currentUserName);
+      if (screenStream) {
+        this.isSharingScreen = true;
+        const me = this.participantsList.find(p => p.name.trim().toLowerCase() === this.currentUserName.trim().toLowerCase());
+        if (me) {
+          me.isSharingScreen = true;
+          this.spotlightParticipant = me;
+        }
+      }
+    }
   }
 
   toggleParticipants(): void {
